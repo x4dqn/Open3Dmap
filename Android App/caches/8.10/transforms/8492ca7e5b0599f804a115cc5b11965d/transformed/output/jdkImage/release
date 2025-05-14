@@ -1,0 +1,2 @@
+JAVA_VERSION="21"
+MODULES="java.base"

@@ -1,0 +1,18 @@
+# Keep Sceneform public-facing classes
+-keepparameternames
+
+# These are part of the Java <-> native interfaces for Sceneform.
+-keepclasseswithmembernames,includedescriptorclasses class com.google.ar.sceneform.** {
+    native <methods>;
+}
+
+-keep,includedescriptorclasses public class com.google.ar.sceneform.** {*;}
+
+# If you need to build a library on top of sceneform, and use this library for your project
+# Please un-comment this line below.
+# -keepattributes *Annotation*
+
+-keep public class com.google.ar.schemas.sceneform.** {*;}
+-keep public class com.google.ar.schemas.lull.** {*;}
+-keep public class com.google.flatbuffers.** {*;}
+-keep class com.google.android.filament.** {*;}

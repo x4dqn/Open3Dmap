@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Note: This file lists the set of resources (by resource reference) that
+  should be explicitly kept even when they would otherwise be removed by
+  resource shrinking. See (go/blaze-android-resource-shrinking)
+  https://developer.android.com/studio/build/shrink-code.html#keep-resources
+-->
+<resources xmlns:tools="http://schemas.android.com/tools"
+   tools:keep="
+       @layout/__arcore_education,
+       @id/__arcore_*,
+       @string/__arcore_*"
+/>

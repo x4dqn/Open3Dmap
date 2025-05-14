@@ -1,0 +1,3 @@
+o/.gradle-instrumented-classpath.marker
+o/.gradle-agent-instrumented.marker
+o/instrumented/instrumented-listenablefuture-9999.0-empty-to-avoid-conflict-with-guava.jar
