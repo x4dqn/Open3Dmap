@@ -1,0 +1,194 @@
+{
+  "formatVersion": "1.1",
+  "component": {
+    "group": "androidx.sqlite",
+    "module": "sqlite",
+    "version": "2.4.0",
+    "attributes": {
+      "org.gradle.status": "release"
+    }
+  },
+  "createdBy": {
+    "gradle": {
+      "version": "8.3"
+    }
+  },
+  "variants": [
+    {
+      "name": "releaseVariantReleaseApiPublication",
+      "attributes": {
+        "org.gradle.category": "library",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.libraryelements": "aar",
+        "org.gradle.usage": "java-api"
+      },
+      "dependencies": [
+        {
+          "group": "androidx.annotation",
+          "module": "annotation",
+          "version": {
+            "requires": "1.0.0"
+          }
+        }
+      ],
+      "dependencyConstraints": [
+        {
+          "group": "androidx.sqlite",
+          "module": "sqlite-framework",
+          "version": {
+            "requires": "2.4.0"
+          },
+          "reason": "sqlite is in atomic group androidx.sqlite"
+        },
+        {
+          "group": "androidx.sqlite",
+          "module": "sqlite-ktx",
+          "version": {
+            "requires": "2.4.0"
+          },
+          "reason": "sqlite is in atomic group androidx.sqlite"
+        }
+      ],
+      "files": [
+        {
+          "name": "sqlite-2.4.0.aar",
+          "url": "sqlite-2.4.0.aar",
+          "size": 30233,
+          "sha512": "14b8c18de6f95d42ffbefbc1c554f0f48e27599b5f64308eab7aac437394e8dd91dc83d2d989934e561f52dc94a1473513f2c6d968c415f857073b9998ed609a",
+          "sha256": "bb7fa113112f7e4857496e222e3051d73a910add74bf40761e1bdae55b0216af",
+          "sha1": "cc553e5621c8ad4e233059a724100afa9e2fd1f4",
+          "md5": "6bee700eb04579556b22055876080555"
+        }
+      ]
+    },
+    {
+      "name": "releaseVariantReleaseRuntimePublication",
+      "attributes": {
+        "org.gradle.category": "library",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.libraryelements": "aar",
+        "org.gradle.usage": "java-runtime"
+      },
+      "dependencies": [
+        {
+          "group": "androidx.annotation",
+          "module": "annotation",
+          "version": {
+            "requires": "1.0.0"
+          }
+        },
+        {
+          "group": "org.jetbrains.kotlin",
+          "module": "kotlin-stdlib",
+          "version": {
+            "requires": "1.8.22"
+          }
+        }
+      ],
+      "dependencyConstraints": [
+        {
+          "group": "androidx.sqlite",
+          "module": "sqlite-framework",
+          "version": {
+            "requires": "2.4.0"
+          },
+          "reason": "sqlite is in atomic group androidx.sqlite"
+        },
+        {
+          "group": "androidx.sqlite",
+          "module": "sqlite-ktx",
+          "version": {
+            "requires": "2.4.0"
+          },
+          "reason": "sqlite is in atomic group androidx.sqlite"
+        }
+      ],
+      "files": [
+        {
+          "name": "sqlite-2.4.0.aar",
+          "url": "sqlite-2.4.0.aar",
+          "size": 30233,
+          "sha512": "14b8c18de6f95d42ffbefbc1c554f0f48e27599b5f64308eab7aac437394e8dd91dc83d2d989934e561f52dc94a1473513f2c6d968c415f857073b9998ed609a",
+          "sha256": "bb7fa113112f7e4857496e222e3051d73a910add74bf40761e1bdae55b0216af",
+          "sha1": "cc553e5621c8ad4e233059a724100afa9e2fd1f4",
+          "md5": "6bee700eb04579556b22055876080555"
+        }
+      ]
+    },
+    {
+      "name": "sourcesElements",
+      "attributes": {
+        "org.gradle.category": "documentation",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.docstype": "sources",
+        "org.gradle.usage": "java-runtime"
+      },
+      "dependencyConstraints": [
+        {
+          "group": "androidx.sqlite",
+          "module": "sqlite-framework",
+          "version": {
+            "requires": "2.4.0"
+          },
+          "reason": "sqlite is in atomic group androidx.sqlite"
+        },
+        {
+          "group": "androidx.sqlite",
+          "module": "sqlite-ktx",
+          "version": {
+            "requires": "2.4.0"
+          },
+          "reason": "sqlite is in atomic group androidx.sqlite"
+        }
+      ],
+      "files": [
+        {
+          "name": "sqlite-2.4.0-sources.jar",
+          "url": "sqlite-2.4.0-sources.jar",
+          "size": 20824,
+          "sha512": "53c3798ed2f0897d495d6f5f9baaeb833086df39d11f3e8ee7f328b5f05309c5e34b76e43823372d4cc8dd2cbbd53bbc8090d976b62f6cf2fe045156f9ca3939",
+          "sha256": "a6777c99f104a2d01afcb95137c9de494220cd968f91f3dd04ece79c3e8d8b13",
+          "sha1": "64eec23481a9132037f83e036924d7d584a17c3d",
+          "md5": "e0e227791136f86b7981cf7d595b3a58"
+        }
+      ]
+    },
+    {
+      "name": "libraryVersionMetadata",
+      "attributes": {
+        "org.gradle.category": "documentation",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.usage": "library-version-metadata"
+      },
+      "dependencyConstraints": [
+        {
+          "group": "androidx.sqlite",
+          "module": "sqlite-framework",
+          "version": {
+            "requires": "2.4.0"
+          },
+          "reason": "sqlite is in atomic group androidx.sqlite"
+        },
+        {
+          "group": "androidx.sqlite",
+          "module": "sqlite-ktx",
+          "version": {
+            "requires": "2.4.0"
+          },
+          "reason": "sqlite is in atomic group androidx.sqlite"
+        }
+      ],
+      "files": [
+        {
+          "name": "sqlite-2.4.0-versionMetadata.json",
+          "url": "sqlite-2.4.0-versionMetadata.json",
+          "size": 7677,
+          "sha512": "607651046b73c9e5530b535b6f92ad6a3ce04af992b829da3f22306001a69c9b6be0bf7a3d1eb36737a16bb2eb4dc90195c23f5db87be608265d7e78bae8711e",
+          "sha256": "21b765bc0b996482591a1d3bd838fab01139858e7a39ffddd5efd828d35ebf5f",
+          "sha1": "490fe2334b37b9c6c9064e14788bf3f564b435c9",
+          "md5": "6cf01e0a8f4aab0ef27a3b52092ddb62"
+        }
+      ]
+    }
+  ]
+}

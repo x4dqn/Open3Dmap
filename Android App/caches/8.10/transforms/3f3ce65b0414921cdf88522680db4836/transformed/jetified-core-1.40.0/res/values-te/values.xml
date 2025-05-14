@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding='utf-8' standalone='no'?>
+<resources>
+<!-- blaze-out/k8-opt/genfiles/third_party/arcore/java/com/google/ar/core/res_aar/values-te/strings.xml -->
+<eat-comment/>
+<string name="__arcore_cancel">రద్దు చేయండి</string>
+<string name="__arcore_continue">కొనసాగించండి</string>
+<string name="__arcore_install_app">ఈ యాప్‌కు AR కోసం Google Play సేవలు యొక్క తాజా వెర్షన్ అవసరం.</string>
+<string name="__arcore_install_feature">ఈ ఫీచర్ కోసం AR కోసం Google Play సేవలు యొక్క తాజా వెర్షన్ అవసరం.</string>
+<string name="__arcore_installing">AR కోసం Google Play సేవలు ఇన్‌స్టాల్ చేస్తోంది…</string>
+</resources>

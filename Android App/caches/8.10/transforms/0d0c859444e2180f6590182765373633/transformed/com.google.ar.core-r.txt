@@ -1,0 +1,11 @@
+com.google.ar.core
+id __arcore_cancelButton
+id __arcore_continueButton
+id __arcore_messageText
+layout __arcore_education
+raw keep_arcore
+string __arcore_cancel
+string __arcore_continue
+string __arcore_install_app
+string __arcore_install_feature
+string __arcore_installing

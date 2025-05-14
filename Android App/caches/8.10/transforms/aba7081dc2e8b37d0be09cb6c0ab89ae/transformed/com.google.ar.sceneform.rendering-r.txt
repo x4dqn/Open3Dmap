@@ -1,0 +1,22 @@
+com.google.ar.sceneform.rendering
+drawable sceneform_plane
+id __arcore_cancelButton
+id __arcore_continueButton
+id __arcore_messageText
+layout __arcore_education
+raw keep_arcore
+raw sceneform_camera_material
+raw sceneform_default_light_probe
+raw sceneform_opaque_colored_material
+raw sceneform_opaque_textured_material
+raw sceneform_plane_material
+raw sceneform_plane_shadow_material
+raw sceneform_transparent_colored_material
+raw sceneform_transparent_textured_material
+raw sceneform_view_renderable
+string __arcore_cancel
+string __arcore_continue
+string __arcore_install_app
+string __arcore_install_feature
+string __arcore_installing
+string lib_name

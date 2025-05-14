@@ -1,0 +1,4 @@
+androidx.test.espresso.IdlingRegistry
+androidx.test.espresso.IdlingResource
+androidx.test.espresso.IdlingResource$ResourceCallback
+androidx.test.espresso.idling.CountingIdlingResource

@@ -1,0 +1,75 @@
+# System files
+.DS_Store
+
+# IDE files
+.idea/
+*.iml
+
+# Build and generated files
+.gradle/
+build/
+captures/
+.externalNativeBuild/
+.cxx/
+bin/
+gen/
+out/
+bot/.gradle/
+bot/build/
+bot/app/build/
+bot/app/captures/
+bot/app/.externalNativeBuild/
+bot/app/.cxx/
+bot/app/bin/
+bot/app/gen/
+bot/app/out/
+
+# Gradle wrapper logs
+gradle/wrapper/gradle-wrapper.log
+
+# Local configuration
+local.properties
+
+# Keystore files
+*.jks
+*.keystore
+
+# Google Services (e.g. APIs or Firebase)
+google-services.json
+
+# Android/Java/ARCore
+*.apk
+*.aar
+*.ap_
+*.aab
+*.dex
+*.class
+*.arcore
+*.arcoreasset
+
+# Version control
+vcs.xml
+
+# Profiling
+*.hprof
+
+# Exported data
+exports/
+OpenARMaps/
+
+# Log Files
+*.log
+
+# Lint
+lint/intermediates/
+lint/generated/
+lint/outputs/
+lint/tmp/
+
+# OS generated files
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Others
+bot/.idea/ 

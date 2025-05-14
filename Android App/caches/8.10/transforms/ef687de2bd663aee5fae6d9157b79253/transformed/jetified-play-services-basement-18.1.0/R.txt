@@ -1,0 +1,2 @@
+int integer google_play_services_version 0
+int string common_google_play_services_unknown_issue 0

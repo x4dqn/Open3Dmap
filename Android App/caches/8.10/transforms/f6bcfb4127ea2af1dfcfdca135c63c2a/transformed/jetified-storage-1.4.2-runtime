@@ -1,0 +1,12 @@
+androidx.test.services.storage.TestStorage
+androidx.test.services.storage.TestStorageConstants
+androidx.test.services.storage.TestStorageException
+androidx.test.services.storage.file.HostedFile
+androidx.test.services.storage.file.HostedFile$FileHost
+androidx.test.services.storage.file.HostedFile$FileType
+androidx.test.services.storage.file.HostedFile$HostedFileColumn
+androidx.test.services.storage.file.PropertyFile
+androidx.test.services.storage.file.PropertyFile$Authority
+androidx.test.services.storage.file.PropertyFile$Column
+androidx.test.services.storage.internal.TestStorageUtil
+androidx.test.services.storage.internal.package-info

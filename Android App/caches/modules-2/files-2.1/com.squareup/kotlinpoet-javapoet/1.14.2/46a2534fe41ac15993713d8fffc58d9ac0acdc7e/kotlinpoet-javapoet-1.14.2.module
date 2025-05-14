@@ -1,0 +1,110 @@
+{
+  "formatVersion": "1.1",
+  "component": {
+    "group": "com.squareup",
+    "module": "kotlinpoet-javapoet",
+    "version": "1.14.2",
+    "attributes": {
+      "org.gradle.status": "release"
+    }
+  },
+  "createdBy": {
+    "gradle": {
+      "version": "8.1.1"
+    }
+  },
+  "variants": [
+    {
+      "name": "apiElements",
+      "attributes": {
+        "org.gradle.category": "library",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.jvm.environment": "standard-jvm",
+        "org.gradle.jvm.version": 8,
+        "org.gradle.libraryelements": "jar",
+        "org.gradle.usage": "java-api",
+        "org.jetbrains.kotlin.platform.type": "jvm"
+      },
+      "dependencies": [
+        {
+          "group": "com.squareup",
+          "module": "kotlinpoet",
+          "version": {
+            "requires": "1.14.2"
+          }
+        },
+        {
+          "group": "com.squareup",
+          "module": "javapoet",
+          "version": {
+            "requires": "1.13.0"
+          }
+        },
+        {
+          "group": "org.jetbrains.kotlin",
+          "module": "kotlin-stdlib-jdk8",
+          "version": {
+            "requires": "1.8.21"
+          }
+        }
+      ],
+      "files": [
+        {
+          "name": "kotlinpoet-javapoet-1.14.2.jar",
+          "url": "kotlinpoet-javapoet-1.14.2.jar",
+          "size": 14133,
+          "sha512": "fc6429208be894eb44b91a897c1c3a94f98462b96a1cb7ff607fa9ddd1c8b3ef3c92b1f5cc4902eebdce3822d86df33590ea18b4dfa55c181314c16c69cfd52e",
+          "sha256": "892aa78f3a3df30daaec099d06ef0b8e884e96111a9e14961cbf745aff371f1b",
+          "sha1": "e4481d491afe47e3dcce952c87628141dc16454b",
+          "md5": "adc275ef2842e63e691070a8d5d077e1"
+        }
+      ]
+    },
+    {
+      "name": "runtimeElements",
+      "attributes": {
+        "org.gradle.category": "library",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.jvm.environment": "standard-jvm",
+        "org.gradle.jvm.version": 8,
+        "org.gradle.libraryelements": "jar",
+        "org.gradle.usage": "java-runtime",
+        "org.jetbrains.kotlin.platform.type": "jvm"
+      },
+      "dependencies": [
+        {
+          "group": "com.squareup",
+          "module": "kotlinpoet",
+          "version": {
+            "requires": "1.14.2"
+          }
+        },
+        {
+          "group": "com.squareup",
+          "module": "javapoet",
+          "version": {
+            "requires": "1.13.0"
+          }
+        },
+        {
+          "group": "org.jetbrains.kotlin",
+          "module": "kotlin-stdlib-jdk8",
+          "version": {
+            "requires": "1.8.21"
+          }
+        }
+      ],
+      "files": [
+        {
+          "name": "kotlinpoet-javapoet-1.14.2.jar",
+          "url": "kotlinpoet-javapoet-1.14.2.jar",
+          "size": 14133,
+          "sha512": "fc6429208be894eb44b91a897c1c3a94f98462b96a1cb7ff607fa9ddd1c8b3ef3c92b1f5cc4902eebdce3822d86df33590ea18b4dfa55c181314c16c69cfd52e",
+          "sha256": "892aa78f3a3df30daaec099d06ef0b8e884e96111a9e14961cbf745aff371f1b",
+          "sha1": "e4481d491afe47e3dcce952c87628141dc16454b",
+          "md5": "adc275ef2842e63e691070a8d5d077e1"
+        }
+      ]
+    }
+  ]
+}
