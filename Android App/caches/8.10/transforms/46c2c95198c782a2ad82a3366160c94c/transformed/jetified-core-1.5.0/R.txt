@@ -1,3 +1,0 @@
-int id view_tree_lifecycle_owner 0x00000000
-int style WhiteBackgroundDialogTheme 0x00000000
-int style WhiteBackgroundTheme 0x00000000

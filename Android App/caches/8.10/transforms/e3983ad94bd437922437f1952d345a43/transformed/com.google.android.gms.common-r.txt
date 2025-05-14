@@ -1,3 +1,0 @@
-com.google.android.gms.common
-integer google_play_services_version
-string common_google_play_services_unknown_issue

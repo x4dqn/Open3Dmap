@@ -1,2 +1,0 @@
-com.google.android.filament
-string lib_name

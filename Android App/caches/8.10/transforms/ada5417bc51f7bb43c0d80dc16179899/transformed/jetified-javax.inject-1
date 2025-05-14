@@ -1,6 +1,0 @@
-javax.inject.Inject
-javax.inject.Named
-javax.inject.Provider
-javax.inject.Qualifier
-javax.inject.Scope
-javax.inject.Singleton
