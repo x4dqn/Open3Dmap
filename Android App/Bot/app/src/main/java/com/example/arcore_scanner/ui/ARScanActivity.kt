@@ -36,6 +36,7 @@ import java.io.FileOutputStream
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
+import org.json.JSONObject
 
 class ARScanActivity : AppCompatActivity() {
     private var arSession: Session? = null
@@ -51,6 +52,8 @@ class ARScanActivity : AppCompatActivity() {
     private var frameCount = 0
     private val isScanning = AtomicBoolean(false)
     private var lastKnownLocation: GpsLocation? = null
+    private var lastPose: Pose? = null
+    private var lastTimestamp: Long = 0
 
     companion object {
         private const val TAG = "ARScanActivity"
@@ -239,6 +242,11 @@ class ARScanActivity : AppCompatActivity() {
         }
         
         exportButton.setOnClickListener {
+            if (isScanning.get()) {
+                Toast.makeText(this, "Please stop scanning before exporting", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+            Log.d(TAG, "Export button clicked")
             showExportDialog()
         }
     }
@@ -290,8 +298,34 @@ class ARScanActivity : AppCompatActivity() {
         }
         
         // Show the export dialog
-        val exportDialog = ExportDialog(this, scanDatabase, this)
-        exportDialog.show()
+        lifecycleScope.launch {
+            try {
+                scanDatabase.scanDao().getAllScans().collect { scanList: List<ScanSession> ->
+                    if (scanList.isEmpty()) {
+                        Toast.makeText(this@ARScanActivity, "No scans available to export", Toast.LENGTH_SHORT).show()
+                        return@collect
+                    }
+
+                    val dateFormat = java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss", java.util.Locale.getDefault())
+                    val items: Array<CharSequence> = scanList.map { scan ->
+                        "Scan ${scan.scanId.take(8)} - ${dateFormat.format(java.util.Date(scan.startTime))}"
+                    }.toTypedArray()
+
+                    android.app.AlertDialog.Builder(this@ARScanActivity)
+                        .setTitle("Select Scan to Export")
+                        .setItems(items) { _, which ->
+                            lifecycleScope.launch {
+                                exportMetadata(scanList[which])
+                            }
+                        }
+                        .setNegativeButton("Cancel", null)
+                        .show()
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Error showing export dialog", e)
+                Toast.makeText(this@ARScanActivity, "Error loading scans: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
+        }
     }
 
     private fun startLocationUpdates() {
@@ -475,6 +509,7 @@ class ARScanActivity : AppCompatActivity() {
                 currentScanSession?.let { session ->
                     session.endTime = System.currentTimeMillis()
                     scanDatabase.scanDao().updateScan(session)
+                    Log.d(TAG, "Scan session ${session.scanId} ended with $frameCount frames")
                 }
                 isScanning.set(false)
             } catch (e: Exception) {
@@ -486,25 +521,56 @@ class ARScanActivity : AppCompatActivity() {
 
     private fun startFrameCapture() {
         lifecycleScope.launch {
+            var lastCaptureTime = System.currentTimeMillis()
+            val captureInterval = 200L // 5 frames per second (1000ms / 5)
+            
+            Log.d(TAG, "Starting frame capture loop")
+            
             while (isScanning.get() && arSession != null) {
                 try {
+                    val currentTime = System.currentTimeMillis()
                     val frame = arSession?.update() ?: continue
                     
                     // Check tracking state and update UI accordingly
                     updateTrackingStatus(frame.camera.trackingState)
                     
-                    // Only capture frames when tracking is good
-                    if (frame.camera.trackingState == TrackingState.TRACKING) {
-                        captureFrame(frame)
+                    // Log tracking state and quality
+                    val trackingState = frame.camera.trackingState
+                    val trackingQuality = when (trackingState) {
+                        TrackingState.TRACKING -> 1.0f
+                        TrackingState.PAUSED -> 0.5f
+                        else -> 0.0f
+                    }
+                    
+                    // Get motion data for quality assessment
+                    val motionData = getMotionData(frame)
+                    val motionQuality = calculateMotionQuality(motionData)
+                    
+                    Log.d(TAG, "Frame check - Tracking: $trackingState, Quality: ${(motionQuality * 100).toInt()}%, Time since last: ${currentTime - lastCaptureTime}ms")
+                    
+                    // Only capture frames when tracking is good and enough time has passed
+                    if (trackingState == TrackingState.TRACKING && 
+                        (currentTime - lastCaptureTime) >= captureInterval &&
+                        motionQuality > 0.3f) {
+                        
+                        Log.d(TAG, "Attempting to capture frame")
+                        captureFrame(frame, trackingQuality, motionQuality)
+                        lastCaptureTime = currentTime
+                        
+                        // Update UI with frame count
+                        runOnUiThread {
+                            statusText.text = "Frames: $frameCount (Quality: ${(motionQuality * 100).toInt()}%)"
+                        }
                     }
                     
                     // Add a small delay to avoid overwhelming the system
-                    kotlinx.coroutines.delay(100)
+                    kotlinx.coroutines.delay(16) // ~60fps for UI updates
                 } catch (e: Exception) {
-                    Log.e(TAG, "Error capturing frame", e)
+                    Log.e(TAG, "Error in frame capture loop", e)
                     statusText.text = "Error capturing frame: ${e.message}"
                 }
             }
+            Log.d(TAG, "Frame capture loop ended")
         }
     }
 
@@ -512,9 +578,9 @@ class ARScanActivity : AppCompatActivity() {
         runOnUiThread {
             when (trackingState) {
                 TrackingState.TRACKING -> {
-                    // Normal tracking - clear any warning messages
-                    if (!statusText.text.toString().startsWith("Frames captured:")) {
-                        statusText.text = "Tracking OK" + (if (frameCount > 0) " - Frames: $frameCount" else "")
+                    // Only update if we're not already showing frame count
+                    if (!statusText.text.toString().startsWith("Frames:")) {
+                        statusText.text = "Frames: $frameCount"
                     }
                     scanButton.isEnabled = true
                 }
@@ -547,50 +613,281 @@ class ARScanActivity : AppCompatActivity() {
         }
     }
 
-    private suspend fun captureFrame(arFrame: com.google.ar.core.Frame) {
+    private suspend fun captureFrame(arFrame: com.google.ar.core.Frame, trackingQuality: Float, motionQuality: Float) {
         try {
             val camera = arFrame.camera
             val pose = camera.displayOrientedPose
             val poseMatrix = FloatArray(16)
             pose.toMatrix(poseMatrix, 0)
 
-            // Capture image
+            // Get camera intrinsics
+            val intrinsics = camera.imageIntrinsics
+            val image = arFrame.acquireCameraImage()
+            
             try {
-                val image = arFrame.acquireCameraImage()
-                saveImageToFile(image)
-            } catch (e: Exception) {
-                Log.e(TAG, "Error acquiring camera image", e)
-            }
+                // Log overall frame quality metrics
+                Log.d(TAG, """
+                    Frame Quality Assessment:
+                    - Tracking State: ${camera.trackingState}
+                    - Tracking Quality: ${(trackingQuality * 100).toInt()}%
+                    - Motion Quality: ${(motionQuality * 100).toInt()}%
+                    - Combined Quality: ${(((trackingQuality + motionQuality) / 2.0f) * 100).toInt()}%
+                """.trimIndent())
 
-            val frameData = com.example.arcore_scanner.data.models.Frame(
-                frameId = "frame_${frameCount.toString().padStart(3, '0')}",
-                sessionId = currentScanSession?.scanId ?: "",
-                localPose = pose,
-                poseMatrix = poseMatrix,
-                gps = getCurrentGpsLocation(),
-                imu = getImuData(),
-                poseConfidence = camera.trackingState.ordinal.toFloat(),
-                exposureInfo = getExposureInfo()
-            )
+                // Capture image
+                val imagePath = saveImageToFile(image)
+                Log.d(TAG, "Saved image to: $imagePath")
+                
+                if (imagePath.isEmpty()) {
+                    Log.e(TAG, "Failed to save image to file")
+                    return
+                }
+                
+                // Get current GPS location
+                val gpsLocation = getCurrentGpsLocation()
+                
+                // Create frame data
+                val frameData = com.example.arcore_scanner.data.models.Frame(
+                    frameId = "frame_${frameCount.toString().padStart(3, '0')}",
+                    sessionId = currentScanSession?.scanId ?: throw IllegalStateException("No active scan session"),
+                    localPose = pose,
+                    poseMatrix = poseMatrix,
+                    gps = gpsLocation,
+                    imu = getImuData(),
+                    poseConfidence = trackingQuality,
+                    frameQualityScore = motionQuality,
+                    exposureInfo = getExposureInfo(),
+                    manualTags = emptyList(),
+                    timestamp = System.currentTimeMillis()
+                )
 
-            scanDatabase.frameDao().insertFrame(frameData)
-            frameCount++
+                // Save frame to database
+                try {
+                    scanDatabase.frameDao().insertFrame(frameData)
+                    frameCount++
+                    Log.d(TAG, "Frame $frameCount saved to database with ID: ${frameData.frameId}")
 
-            // Update UI with frame count
-            runOnUiThread {
-                statusText.text = "Frames captured: $frameCount"
+                    // Update UI with frame count and quality
+                    runOnUiThread {
+                        statusText.text = "Frames: $frameCount (Quality: ${(motionQuality * 100).toInt()}%)"
+                    }
+                } catch (e: Exception) {
+                    Log.e(TAG, "Error saving frame to database", e)
+                    throw e
+                }
+            } finally {
+                image.close()
             }
         } catch (e: Exception) {
-            Log.e(TAG, "Error processing frame", e)
-            throw e
+            Log.e(TAG, "Error capturing frame", e)
         }
     }
+
+    private fun getMotionData(frame: com.google.ar.core.Frame): MotionData {
+        val camera = frame.camera
+        val currentPose = camera.displayOrientedPose
+        val currentTimestamp = frame.timestamp
+        
+        // Calculate relative motion if we have a previous pose
+        val translation = FloatArray(3)
+        val rotation = FloatArray(4)
+        
+        if (lastPose != null && lastTimestamp > 0) {
+            // Get current and last positions
+            val currentPosition = FloatArray(3)
+            val lastPosition = FloatArray(3)
+            currentPose.getTranslation(currentPosition, 0)
+            lastPose!!.getTranslation(lastPosition, 0)
+            
+            // Calculate translation as the difference between positions
+            translation[0] = currentPosition[0] - lastPosition[0]
+            translation[1] = currentPosition[1] - lastPosition[1]
+            translation[2] = currentPosition[2] - lastPosition[2]
+            
+            // Get current and last rotations
+            val currentRotation = FloatArray(4)
+            val lastRotation = FloatArray(4)
+            currentPose.getRotationQuaternion(currentRotation, 0)
+            lastPose!!.getRotationQuaternion(lastRotation, 0)
+            
+            // Calculate relative rotation: current * inverse(last)
+            // For quaternions, inverse is [w, -x, -y, -z]
+            val lastInverse = floatArrayOf(
+                lastRotation[0],  // w
+                -lastRotation[1], // -x
+                -lastRotation[2], // -y
+                -lastRotation[3]  // -z
+            )
+            
+            // Quaternion multiplication: current * lastInverse
+            rotation[0] = currentRotation[0] * lastInverse[0] - currentRotation[1] * lastInverse[1] -
+                         currentRotation[2] * lastInverse[2] - currentRotation[3] * lastInverse[3]
+            rotation[1] = currentRotation[0] * lastInverse[1] + currentRotation[1] * lastInverse[0] +
+                         currentRotation[2] * lastInverse[3] - currentRotation[3] * lastInverse[2]
+            rotation[2] = currentRotation[0] * lastInverse[2] - currentRotation[1] * lastInverse[3] +
+                         currentRotation[2] * lastInverse[0] + currentRotation[3] * lastInverse[1]
+            rotation[3] = currentRotation[0] * lastInverse[3] + currentRotation[1] * lastInverse[2] -
+                         currentRotation[2] * lastInverse[1] + currentRotation[3] * lastInverse[0]
+            
+            // Normalize the resulting quaternion
+            val magnitude = kotlin.math.sqrt(
+                (rotation[0] * rotation[0] + rotation[1] * rotation[1] +
+                rotation[2] * rotation[2] + rotation[3] * rotation[3]).toDouble()
+            ).toFloat()
+            
+            if (magnitude > 0) {
+                rotation[0] /= magnitude
+                rotation[1] /= magnitude
+                rotation[2] /= magnitude
+                rotation[3] /= magnitude
+            }
+            
+            // Log raw motion data
+            Log.d(TAG, """
+                Raw Motion Data:
+                - Current Position: ${currentPosition[0]}, ${currentPosition[1]}, ${currentPosition[2]}
+                - Last Position: ${lastPosition[0]}, ${lastPosition[1]}, ${lastPosition[2]}
+                - Relative Translation: ${translation[0]}, ${translation[1]}, ${translation[2]}
+                - Current Rotation: ${currentRotation[0]}, ${currentRotation[1]}, ${currentRotation[2]}, ${currentRotation[3]}
+                - Last Rotation: ${lastRotation[0]}, ${lastRotation[1]}, ${lastRotation[2]}, ${lastRotation[3]}
+                - Relative Rotation: ${rotation[0]}, ${rotation[1]}, ${rotation[2]}, ${rotation[3]}
+                - Time Delta: ${(currentTimestamp - lastTimestamp) / 1000000.0}ms
+            """.trimIndent())
+        } else {
+            // First frame, use zero motion
+            translation.fill(0f)
+            rotation[0] = 1f  // w component of identity quaternion
+            rotation[1] = 0f
+            rotation[2] = 0f
+            rotation[3] = 0f
+        }
+        
+        // Update last pose and timestamp
+        lastPose = currentPose
+        lastTimestamp = currentTimestamp
+        
+        return MotionData(
+            translation = translation,
+            rotation = rotation,
+            timestamp = currentTimestamp
+        )
+    }
+
+    private fun calculateMotionQuality(motionData: MotionData): Float {
+        // Calculate translation magnitude in meters
+        val translationMagnitude = kotlin.math.sqrt(
+            (motionData.translation[0] * motionData.translation[0] +
+            motionData.translation[1] * motionData.translation[1] +
+            motionData.translation[2] * motionData.translation[2]).toDouble()
+        ).toFloat()
+        
+        // Calculate rotation magnitude in degrees using quaternion
+        val q = motionData.rotation
+        val w = kotlin.math.abs(q[0])
+        val x = q[1]
+        val y = q[2]
+        val z = q[3]
+        
+        // Calculate rotation angle in degrees
+        val rotationMagnitudeDegrees = if (w >= 1.0f) {
+            0.0f  // No rotation
+        } else {
+            (2.0 * kotlin.math.acos(w) * 180.0 / Math.PI).toFloat()
+        }
+        
+        // Quality ranges for optimal scanning at 5fps (200ms per frame):
+        // Translation: 0.2cm to 2cm per frame (0.002m to 0.02m)
+        // This means 1-10cm per second, which is a reasonable walking speed
+        // Rotation: 0.1° to 1° per frame
+        // This means 0.5-5° per second, which is a reasonable turning rate
+        val idealTranslationRange = 0.002f..0.02f
+        val idealRotationRange = 0.1f..1.0f
+        
+        // Calculate translation quality score (0.0 to 1.0)
+        val translationQuality = when {
+            translationMagnitude in idealTranslationRange -> 1.0f
+            translationMagnitude < idealTranslationRange.start -> {
+                // Too little movement - score based on how close to minimum
+                translationMagnitude / idealTranslationRange.start
+            }
+            else -> {
+                // Too much movement - score based on how close to maximum
+                idealTranslationRange.endInclusive / translationMagnitude
+            }
+        }
+        
+        // Calculate rotation quality score (0.0 to 1.0)
+        val rotationQuality = when {
+            rotationMagnitudeDegrees in idealRotationRange -> 1.0f
+            rotationMagnitudeDegrees < idealRotationRange.start -> {
+                // Too little rotation - score based on how close to minimum
+                rotationMagnitudeDegrees / idealRotationRange.start
+            }
+            else -> {
+                // Too much rotation - score based on how close to maximum
+                idealRotationRange.endInclusive / rotationMagnitudeDegrees
+            }
+        }
+        
+        // Log detailed quality metrics
+        Log.d(TAG, """
+            Motion Quality Metrics:
+            - Translation: ${(translationMagnitude * 100).toInt()}cm (Score: ${(translationQuality * 100).toInt()}%)
+            - Rotation: ${rotationMagnitudeDegrees.toInt()}° (Score: ${(rotationQuality * 100).toInt()}%)
+            - Combined Score: ${(((translationQuality + rotationQuality) / 2.0f) * 100).toInt()}%
+        """.trimIndent())
+        
+        // Return average of translation and rotation quality
+        return (translationQuality + rotationQuality) / 2.0f
+    }
+
+    private fun quaternionToEuler(q: FloatArray): FloatArray {
+        // Convert quaternion to euler angles (in degrees)
+        // Using the correct conversion formula for ARCore's coordinate system
+        val roll = Math.atan2(2.0 * (q[0] * q[1] + q[2] * q[3]), 1.0 - 2.0 * (q[1] * q[1] + q[2] * q[2]))
+        val pitch = Math.asin(2.0 * (q[0] * q[2] - q[3] * q[1]))
+        val yaw = Math.atan2(2.0 * (q[0] * q[3] + q[1] * q[2]), 1.0 - 2.0 * (q[2] * q[2] + q[3] * q[3]))
+        
+        // Convert to degrees and normalize to -180 to 180
+        val rollDegrees = (roll * 180.0 / Math.PI).toFloat()
+        val pitchDegrees = (pitch * 180.0 / Math.PI).toFloat()
+        val yawDegrees = (yaw * 180.0 / Math.PI).toFloat()
+        
+        // Normalize angles to -180 to 180 degrees
+        fun normalizeAngle(angle: Float): Float {
+            var normalized = angle
+            while (normalized > 180f) normalized -= 360f
+            while (normalized < -180f) normalized += 360f
+            return normalized
+        }
+        
+        return floatArrayOf(
+            normalizeAngle(rollDegrees),
+            normalizeAngle(pitchDegrees),
+            normalizeAngle(yawDegrees)
+        )
+    }
+
+    data class MotionData(
+        val translation: FloatArray,
+        val rotation: FloatArray,
+        val timestamp: Long
+    )
+
+    data class CameraIntrinsics(
+        val focalLength: Float,
+        val principalPoint: FloatArray,
+        val imageWidth: Int,
+        val imageHeight: Int
+    )
 
     private fun saveImageToFile(image: Image): String {
         val frameId = "frame_${frameCount.toString().padStart(3, '0')}"
         val file = File(getExternalFilesDir(null), "$frameId.jpg")
         
         try {
+            Log.d(TAG, "Attempting to save image to: ${file.absolutePath}")
+            
             val planes = image.planes
             val buffer = planes[0].buffer
             val pixelStride = planes[0].pixelStride
@@ -629,7 +926,7 @@ class ARScanActivity : AppCompatActivity() {
                     null
                 )
 
-                // Convert YUV to JPEG
+                // Convert YUV to JPEG with proper orientation
                 val out = FileOutputStream(file)
                 yuvImage.compressToJpeg(
                     android.graphics.Rect(0, 0, image.width, image.height),
@@ -637,6 +934,7 @@ class ARScanActivity : AppCompatActivity() {
                     out
                 )
                 out.close()
+                Log.d(TAG, "Successfully saved YUV image")
             } else {
                 // If we can't process YUV, try direct buffer copy
                 try {
@@ -644,6 +942,7 @@ class ARScanActivity : AppCompatActivity() {
                     FileOutputStream(file).use { out ->
                         bitmap.compress(Bitmap.CompressFormat.JPEG, 90, out)
                     }
+                    Log.d(TAG, "Successfully saved direct buffer image")
                 } catch (e: Exception) {
                     Log.e(TAG, "Error processing image buffer", e)
                     // Create a placeholder frame with error information
@@ -663,6 +962,7 @@ class ARScanActivity : AppCompatActivity() {
                     FileOutputStream(file).use { out ->
                         bitmap.compress(Bitmap.CompressFormat.JPEG, 90, out)
                     }
+                    Log.d(TAG, "Saved error placeholder image")
                 }
             }
 
@@ -671,8 +971,6 @@ class ARScanActivity : AppCompatActivity() {
         } catch (e: Exception) {
             Log.e(TAG, "Error saving image", e)
             return ""
-        } finally {
-            image.close()
         }
     }
 
@@ -785,4 +1083,113 @@ class ARScanActivity : AppCompatActivity() {
             }
         }
     }
+
+    private suspend fun exportMetadata(session: ScanSession) {
+        try {
+            Log.d(TAG, "Starting metadata export for session: ${session.scanId}")
+            
+            // Use Pictures directory for better accessibility
+            val exportDir = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                File(getExternalFilesDir(Environment.DIRECTORY_PICTURES), "ARScan_${session.scanId}")
+            } else {
+                File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES), "ARScan_${session.scanId}")
+            }
+            
+            Log.d(TAG, "Attempting to create export directory at: ${exportDir.absolutePath}")
+            if (!exportDir.exists()) {
+                val dirCreated = exportDir.mkdirs()
+                Log.d(TAG, "Export directory creation result: $dirCreated")
+                if (!dirCreated) {
+                    throw Exception("Failed to create export directory at ${exportDir.absolutePath}")
+                }
+            }
+
+            // Create metadata subdirectory
+            val metadataDir = File(exportDir, "metadata")
+            if (!metadataDir.exists()) {
+                val metadataDirCreated = metadataDir.mkdirs()
+                Log.d(TAG, "Metadata directory creation result: $metadataDirCreated")
+                if (!metadataDirCreated) {
+                    throw Exception("Failed to create metadata directory at ${metadataDir.absolutePath}")
+                }
+            }
+
+            // Get frames from database
+            val frames = scanDatabase.frameDao().getFramesForScan(session.scanId)
+            Log.d(TAG, "Retrieved frames from database for session: ${session.scanId}")
+            
+            frames.collect { frameList ->
+                Log.d(TAG, "Processing ${frameList.size} frames for export")
+                
+                if (frameList.isEmpty()) {
+                    throw Exception("No frames found for session ${session.scanId}")
+                }
+
+                // Create transforms.json in INRIA format
+                val transforms = frameList.map { frame ->
+                    mapOf(
+                        "file_path" to frame.frameId,
+                        "transform_matrix" to frame.poseMatrix.toList(),
+                        "timestamp" to frame.timestamp,
+                        "gps" to mapOf(
+                            "latitude" to frame.gps?.latitude,
+                            "longitude" to frame.gps?.longitude,
+                            "altitude" to frame.gps?.altitude,
+                            "accuracy" to frame.gps?.accuracy
+                        ),
+                        "imu" to mapOf(
+                            "accelerometer" to frame.imu?.accelerometer?.toList(),
+                            "gyroscope" to frame.imu?.gyroscope?.toList()
+                        ),
+                        "quality" to mapOf(
+                            "pose_confidence" to frame.poseConfidence,
+                            "frame_quality" to frame.frameQualityScore
+                        )
+                    )
+                }
+
+                // Write transforms.json
+                val transformsFile = File(metadataDir, "transforms.json")
+                try {
+                    transformsFile.writeText(JSONObject(mapOf("frames" to transforms) as Map<String, Any>).toString(2))
+                    Log.d(TAG, "Successfully wrote transforms.json to: ${transformsFile.absolutePath}")
+                } catch (e: Exception) {
+                    Log.e(TAG, "Error writing transforms.json", e)
+                    throw e
+                }
+
+                // Write session metadata
+                val sessionMetadata = mapOf(
+                    "session_id" to session.scanId,
+                    "device_id" to session.deviceId,
+                    "device_model" to session.deviceModel,
+                    "app_version" to session.appVersion,
+                    "scan_type" to session.scanType.toString(),
+                    "start_time" to session.startTime,
+                    "end_time" to session.endTime,
+                    "frame_count" to frameList.size
+                )
+
+                val sessionFile = File(metadataDir, "session_${session.scanId}.json")
+                try {
+                    sessionFile.writeText(JSONObject(sessionMetadata as Map<String, Any>).toString(2))
+                    Log.d(TAG, "Successfully wrote session metadata to: ${sessionFile.absolutePath}")
+                } catch (e: Exception) {
+                    Log.e(TAG, "Error writing session metadata", e)
+                    throw e
+                }
+
+                runOnUiThread {
+                    Toast.makeText(this, "Metadata exported to: ${exportDir.absolutePath}", Toast.LENGTH_LONG).show()
+                }
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error exporting metadata", e)
+            runOnUiThread {
+                Toast.makeText(this, "Error exporting metadata: ${e.message}", Toast.LENGTH_LONG).show()
+            }
+        }
+    }
+
+    private fun FloatArray.toList(): List<Float> = this.toList()
 } 
