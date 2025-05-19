@@ -16,6 +16,9 @@ import android.provider.Settings
 import android.util.Log
 import android.widget.TextView
 import android.widget.Toast
+import android.widget.EditText
+import android.app.AlertDialog
+import android.content.DialogInterface
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
@@ -37,6 +40,12 @@ import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 import org.json.JSONObject
+import android.widget.ImageButton
+import android.widget.ArrayAdapter
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import android.widget.BaseAdapter
 
 class ARScanActivity : AppCompatActivity() {
     private var arSession: Session? = null
@@ -307,17 +316,54 @@ class ARScanActivity : AppCompatActivity() {
                     }
 
                     val dateFormat = java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss", java.util.Locale.getDefault())
-                    val items: Array<CharSequence> = scanList.map { scan ->
-                        "Scan ${scan.scanId.take(8)} - ${dateFormat.format(java.util.Date(scan.startTime))}"
-                    }.toTypedArray()
-
-                    android.app.AlertDialog.Builder(this@ARScanActivity)
-                        .setTitle("Select Scan to Export")
-                        .setItems(items) { _, which ->
-                            lifecycleScope.launch {
-                                exportMetadata(scanList[which])
+                    
+                    // Create a custom adapter for the list
+                    val adapter = object : BaseAdapter() {
+                        override fun getCount(): Int = scanList.size
+                        override fun getItem(position: Int): Any = scanList[position]
+                        override fun getItemId(position: Int): Long = position.toLong()
+                        
+                        override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
+                            val view = convertView ?: layoutInflater.inflate(R.layout.scan_list_item, parent, false)
+                            val scan = scanList[position]
+                            
+                            val scanNameText = view.findViewById<TextView>(R.id.scanNameText)
+                            val deleteButton = view.findViewById<ImageButton>(R.id.deleteButton)
+                            val renameButton = view.findViewById<ImageButton>(R.id.renameButton)
+                            
+                            // Set the scan name and timestamp
+                            scanNameText.text = scan.name ?: "Scan ${scan.scanId.take(8)} - ${dateFormat.format(java.util.Date(scan.startTime))}"
+                            
+                            // Set up delete button
+                            deleteButton.setOnClickListener {
+                                showDeleteConfirmationDialog(scan)
                             }
+                            
+                            // Set up rename button
+                            renameButton.setOnClickListener {
+                                showRenameDialog(scan)
+                            }
+                            
+                            // Set up long press listener for the entire item
+                            view.setOnLongClickListener {
+                                showScanOptionsDialog(scan)
+                                true
+                            }
+                            
+                            // Set up click listener for the entire item
+                            view.setOnClickListener {
+                                lifecycleScope.launch {
+                                    exportMetadata(scan)
+                                }
+                            }
+                            
+                            return view
                         }
+                    }
+
+                    AlertDialog.Builder(this@ARScanActivity)
+                        .setTitle("Select Scan to Export")
+                        .setAdapter(adapter, null)
                         .setNegativeButton("Cancel", null)
                         .show()
                 }
@@ -326,6 +372,77 @@ class ARScanActivity : AppCompatActivity() {
                 Toast.makeText(this@ARScanActivity, "Error loading scans: ${e.message}", Toast.LENGTH_SHORT).show()
             }
         }
+    }
+
+    private fun showDeleteConfirmationDialog(scan: ScanSession) {
+        AlertDialog.Builder(this)
+            .setTitle("Delete Scan")
+            .setMessage("Are you sure you want to delete this scan? This action cannot be undone.")
+            .setPositiveButton("Delete") { _, _ ->
+                lifecycleScope.launch {
+                    try {
+                        // Delete the scan from the database
+                        scanDatabase.scanDao().deleteScan(scan)
+                        
+                        // Delete the exported files if they exist
+                        val baseDir = File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS), "OpenARMaps/Exports")
+                        val dateFormat = java.text.SimpleDateFormat("yyyy-MM-dd_HH-mm", java.util.Locale.getDefault())
+                        val timestamp = dateFormat.format(java.util.Date(scan.startTime))
+                        val scanName = scan.name?.takeIf { it.isNotEmpty() } ?: "Unnamed_Scan"
+                        val exportDir = File(baseDir, "${scanName}_${timestamp}")
+                        
+                        if (exportDir.exists()) {
+                            exportDir.deleteRecursively()
+                        }
+                        
+                        Toast.makeText(this@ARScanActivity, "Scan deleted successfully", Toast.LENGTH_SHORT).show()
+                    } catch (e: Exception) {
+                        Log.e(TAG, "Error deleting scan", e)
+                        Toast.makeText(this@ARScanActivity, "Error deleting scan: ${e.message}", Toast.LENGTH_SHORT).show()
+                    }
+                }
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
+    }
+
+    private fun showRenameDialog(scan: ScanSession) {
+        val input = EditText(this)
+        input.setText(scan.name ?: "")
+        input.hint = "Enter new scan name"
+        
+        AlertDialog.Builder(this)
+            .setTitle("Rename Scan")
+            .setView(input)
+            .setPositiveButton("Rename") { _, _ ->
+                lifecycleScope.launch {
+                    try {
+                        val newName = input.text.toString().trim()
+                        scan.name = newName
+                        scanDatabase.scanDao().updateScan(scan)
+                        Toast.makeText(this@ARScanActivity, "Scan renamed successfully", Toast.LENGTH_SHORT).show()
+                    } catch (e: Exception) {
+                        Log.e(TAG, "Error renaming scan", e)
+                        Toast.makeText(this@ARScanActivity, "Error renaming scan: ${e.message}", Toast.LENGTH_SHORT).show()
+                    }
+                }
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
+    }
+
+    private fun showScanOptionsDialog(scan: ScanSession) {
+        val options = arrayOf("Rename", "Delete")
+        
+        AlertDialog.Builder(this)
+            .setTitle("Scan Options")
+            .setItems(options) { _, which ->
+                when (which) {
+                    0 -> showRenameDialog(scan)
+                    1 -> showDeleteConfirmationDialog(scan)
+                }
+            }
+            .show()
     }
 
     private fun startLocationUpdates() {
@@ -455,6 +572,25 @@ class ARScanActivity : AppCompatActivity() {
             return
         }
 
+        // Show name input dialog
+        val input = EditText(this)
+        input.hint = "Enter scan name (optional)"
+        
+        AlertDialog.Builder(this)
+            .setTitle("New Scan")
+            .setView(input)
+            .setPositiveButton("Start") { dialog, _ ->
+                val scanName = input.text.toString().trim()
+                startScanWithName(scanName)
+                dialog.dismiss()
+            }
+            .setNegativeButton("Cancel") { dialog, _ ->
+                dialog.dismiss()
+            }
+            .show()
+    }
+
+    private fun startScanWithName(scanName: String) {
         lifecycleScope.launch {
             try {
                 // Show scanning tips
@@ -480,6 +616,7 @@ class ARScanActivity : AppCompatActivity() {
                     deviceId = deviceId,
                     deviceModel = android.os.Build.MODEL,
                     appVersion = packageManager.getPackageInfo(packageName, 0).versionName,
+                    name = scanName.takeIf { it.isNotEmpty() },
                     anchorGps = getCurrentGpsLocation(),
                     originPose = cameraPose,
                     localToWorldMatrix = worldMatrix,
@@ -512,6 +649,10 @@ class ARScanActivity : AppCompatActivity() {
                     Log.d(TAG, "Scan session ${session.scanId} ended with $frameCount frames")
                 }
                 isScanning.set(false)
+                runOnUiThread {
+                    scanButton.text = "Start Scan"
+                    statusText.text = "Scan stopped"
+                }
             } catch (e: Exception) {
                 Log.e(TAG, "Error stopping scan", e)
                 Toast.makeText(this@ARScanActivity, "Error stopping scan: ${e.message}", Toast.LENGTH_SHORT).show()
@@ -934,15 +1075,70 @@ class ARScanActivity : AppCompatActivity() {
                     out
                 )
                 out.close()
-                Log.d(TAG, "Successfully saved YUV image")
+
+                // Read the saved JPEG and rotate it to portrait
+                val savedBitmap = android.graphics.BitmapFactory.decodeFile(file.absolutePath)
+                val rotatedBitmap = if (savedBitmap.width > savedBitmap.height) {
+                    // Landscape image, rotate to portrait
+                    val matrix = android.graphics.Matrix()
+                    matrix.postRotate(90f)
+                    Bitmap.createBitmap(
+                        savedBitmap,
+                        0,
+                        0,
+                        savedBitmap.width,
+                        savedBitmap.height,
+                        matrix,
+                        true
+                    )
+                } else {
+                    savedBitmap
+                }
+
+                // Save the rotated image
+                FileOutputStream(file).use { out ->
+                    rotatedBitmap.compress(Bitmap.CompressFormat.JPEG, 100, out)
+                }
+
+                // Clean up bitmaps
+                savedBitmap.recycle()
+                if (rotatedBitmap != savedBitmap) {
+                    rotatedBitmap.recycle()
+                }
+
+                Log.d(TAG, "Successfully saved YUV image with portrait orientation")
             } else {
                 // If we can't process YUV, try direct buffer copy
                 try {
                     bitmap.copyPixelsFromBuffer(buffer)
-                    FileOutputStream(file).use { out ->
-                        bitmap.compress(Bitmap.CompressFormat.JPEG, 90, out)
+                    
+                    // Rotate the bitmap to portrait if needed
+                    val rotatedBitmap = if (bitmap.width > bitmap.height) {
+                        val matrix = android.graphics.Matrix()
+                        matrix.postRotate(90f)
+                        Bitmap.createBitmap(
+                            bitmap,
+                            0,
+                            0,
+                            bitmap.width,
+                            bitmap.height,
+                            matrix,
+                            true
+                        )
+                    } else {
+                        bitmap
                     }
-                    Log.d(TAG, "Successfully saved direct buffer image")
+
+                    FileOutputStream(file).use { out ->
+                        rotatedBitmap.compress(Bitmap.CompressFormat.JPEG, 90, out)
+                    }
+
+                    // Clean up bitmaps
+                    if (rotatedBitmap != bitmap) {
+                        rotatedBitmap.recycle()
+                    }
+
+                    Log.d(TAG, "Successfully saved direct buffer image with portrait orientation")
                 } catch (e: Exception) {
                     Log.e(TAG, "Error processing image buffer", e)
                     // Create a placeholder frame with error information
@@ -1088,13 +1284,25 @@ class ARScanActivity : AppCompatActivity() {
         try {
             Log.d(TAG, "Starting metadata export for session: ${session.scanId}")
             
-            // Use Pictures directory for better accessibility
-            val exportDir = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                File(getExternalFilesDir(Environment.DIRECTORY_PICTURES), "ARScan_${session.scanId}")
-            } else {
-                File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES), "ARScan_${session.scanId}")
-            }
+            // Create base directory for all exports in public Documents
+            val baseDir = File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS), "OpenARMaps/Exports")
             
+            if (!baseDir.exists()) {
+                val dirCreated = baseDir.mkdirs()
+                Log.d(TAG, "Base directory creation result: $dirCreated")
+                if (!dirCreated) {
+                    throw Exception("Failed to create base directory at ${baseDir.absolutePath}")
+                }
+            }
+
+            // Format the directory name using scan name and timestamp
+            val dateFormat = java.text.SimpleDateFormat("yyyy-MM-dd_HH-mm", java.util.Locale.getDefault())
+            val timestamp = dateFormat.format(java.util.Date(session.startTime))
+            val scanName = session.name?.takeIf { it.isNotEmpty() } ?: "Unnamed_Scan"
+            val exportDirName = "${scanName}_${timestamp}"
+            
+            // Create session-specific directory
+            val exportDir = File(baseDir, exportDirName)
             Log.d(TAG, "Attempting to create export directory at: ${exportDir.absolutePath}")
             if (!exportDir.exists()) {
                 val dirCreated = exportDir.mkdirs()
@@ -1125,11 +1333,28 @@ class ARScanActivity : AppCompatActivity() {
                     throw Exception("No frames found for session ${session.scanId}")
                 }
 
+                // Copy images to export directory
+                val imagesDir = File(exportDir, "images")
+                if (!imagesDir.exists()) {
+                    imagesDir.mkdirs()
+                }
+
+                frameList.forEach { frame ->
+                    val sourceFile = File(getExternalFilesDir(null), "${frame.frameId}.jpg")
+                    if (sourceFile.exists()) {
+                        val destFile = File(imagesDir, "${frame.frameId}.jpg")
+                        sourceFile.copyTo(destFile, overwrite = true)
+                        Log.d(TAG, "Copied image ${frame.frameId}.jpg to export directory")
+                    } else {
+                        Log.w(TAG, "Source image not found: ${sourceFile.absolutePath}")
+                    }
+                }
+
                 // Create transforms.json in INRIA format
                 val transforms = frameList.map { frame ->
                     mapOf(
-                        "file_path" to frame.frameId,
-                        "transform_matrix" to frame.poseMatrix.toList(),
+                        "file_path" to "images/${frame.frameId}.jpg",
+                        "transform_matrix" to frame.poseMatrix.toTypedArray().toList(),
                         "timestamp" to frame.timestamp,
                         "gps" to mapOf(
                             "latitude" to frame.gps?.latitude,
@@ -1138,8 +1363,8 @@ class ARScanActivity : AppCompatActivity() {
                             "accuracy" to frame.gps?.accuracy
                         ),
                         "imu" to mapOf(
-                            "accelerometer" to frame.imu?.accelerometer?.toList(),
-                            "gyroscope" to frame.imu?.gyroscope?.toList()
+                            "accelerometer" to frame.imu?.accelerometer?.toTypedArray()?.toList(),
+                            "gyroscope" to frame.imu?.gyroscope?.toTypedArray()?.toList()
                         ),
                         "quality" to mapOf(
                             "pose_confidence" to frame.poseConfidence,
@@ -1167,7 +1392,8 @@ class ARScanActivity : AppCompatActivity() {
                     "scan_type" to session.scanType.toString(),
                     "start_time" to session.startTime,
                     "end_time" to session.endTime,
-                    "frame_count" to frameList.size
+                    "frame_count" to frameList.size,
+                    "name" to session.name
                 )
 
                 val sessionFile = File(metadataDir, "session_${session.scanId}.json")
@@ -1180,16 +1406,17 @@ class ARScanActivity : AppCompatActivity() {
                 }
 
                 runOnUiThread {
-                    Toast.makeText(this, "Metadata exported to: ${exportDir.absolutePath}", Toast.LENGTH_LONG).show()
+                    Toast.makeText(this@ARScanActivity, "Scan exported to: ${exportDir.absolutePath}", Toast.LENGTH_LONG).show()
                 }
             }
         } catch (e: Exception) {
             Log.e(TAG, "Error exporting metadata", e)
             runOnUiThread {
-                Toast.makeText(this, "Error exporting metadata: ${e.message}", Toast.LENGTH_LONG).show()
+                Toast.makeText(this@ARScanActivity, "Error exporting scan: ${e.message}", Toast.LENGTH_LONG).show()
             }
         }
     }
 
-    private fun FloatArray.toList(): List<Float> = this.toList()
+    // Extension function to convert FloatArray to List<Float>
+    private fun FloatArray.toList(): List<Float> = this.toTypedArray().toList()
 } 

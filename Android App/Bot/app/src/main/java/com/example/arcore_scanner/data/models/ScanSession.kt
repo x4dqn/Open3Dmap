@@ -20,6 +20,7 @@ data class ScanSession(
     val deviceModel: String,
     val appVersion: String,
     val contributorId: String? = null,
+    var name: String? = null,
     @Embedded
     val anchorGps: GpsLocation,
     val originPose: Pose,
