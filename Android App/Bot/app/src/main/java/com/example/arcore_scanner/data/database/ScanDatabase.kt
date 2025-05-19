@@ -10,7 +10,7 @@ import com.example.arcore_scanner.data.models.Frame
 
 @Database(
     entities = [ScanSession::class, Frame::class],
-    version = 1,
+    version = 2,
     exportSchema = false
 )
 @TypeConverters(Converters::class)

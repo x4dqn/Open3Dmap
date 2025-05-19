@@ -21,6 +21,7 @@ import java.util.*
 import android.util.Log
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import android.app.AlertDialog
 
 class ExportDialog(
     context: Context,
@@ -33,6 +34,8 @@ class ExportDialog(
     private lateinit var textExportStatus: TextView
     private lateinit var btnExport: Button
     private lateinit var btnCancel: Button
+    private lateinit var btnRename: Button
+    private lateinit var btnDelete: Button
     
     private var sessions = listOf<ScanSession>()
     private val TAG = "ExportDialog"
@@ -47,6 +50,8 @@ class ExportDialog(
         textExportStatus = findViewById(R.id.textExportStatus)
         btnExport = findViewById(R.id.btnExport)
         btnCancel = findViewById(R.id.btnCancel)
+        btnRename = findViewById(R.id.btnRename)
+        btnDelete = findViewById(R.id.btnDelete)
         
         // Load scan sessions
         loadScanSessions()
@@ -64,6 +69,20 @@ class ExportDialog(
                 Toast.makeText(context, "No scan sessions available", Toast.LENGTH_SHORT).show()
             }
         }
+
+        btnRename.setOnClickListener {
+            if (sessions.isNotEmpty()) {
+                val selectedSession = sessions[spinnerSessions.selectedItemPosition]
+                showRenameDialog(selectedSession)
+            }
+        }
+
+        btnDelete.setOnClickListener {
+            if (sessions.isNotEmpty()) {
+                val selectedSession = sessions[spinnerSessions.selectedItemPosition]
+                showDeleteConfirmationDialog(selectedSession)
+            }
+        }
     }
     
     private fun loadScanSessions() {
@@ -71,6 +90,8 @@ class ExportDialog(
             Log.e(TAG, "Activity reference is null")
             Toast.makeText(context, "Error: Cannot access activity", Toast.LENGTH_SHORT).show()
             btnExport.isEnabled = false
+            btnRename.isEnabled = false
+            btnDelete.isEnabled = false
             return
         }
         
@@ -81,12 +102,14 @@ class ExportDialog(
                 if (sessions.isEmpty()) {
                     Toast.makeText(context, "No scan sessions found", Toast.LENGTH_SHORT).show()
                     btnExport.isEnabled = false
+                    btnRename.isEnabled = false
+                    btnDelete.isEnabled = false
                 } else {
                     // Create adapter with session names and timestamps
                     val sessionNames = sessions.map { session ->
                         val date = Date(session.startTime)
                         val dateFormat = SimpleDateFormat("MMM dd, HH:mm", Locale.getDefault())
-                        "Scan - ${dateFormat.format(date)}"
+                        session.name ?: "Scan - ${dateFormat.format(date)}"
                     }.toTypedArray()
                     
                     val adapter = ArrayAdapter(context, android.R.layout.simple_spinner_item, sessionNames)
@@ -98,6 +121,57 @@ class ExportDialog(
                 Toast.makeText(context, "Error loading scan sessions: ${e.message}", Toast.LENGTH_SHORT).show()
             }
         }
+    }
+
+    private fun showRenameDialog(session: ScanSession) {
+        val input = EditText(context)
+        input.setText(session.name ?: "")
+        input.hint = "Enter scan name"
+
+        AlertDialog.Builder(context)
+            .setTitle("Rename Scan")
+            .setView(input)
+            .setPositiveButton("Rename") { _, _ ->
+                val newName = input.text.toString().trim()
+                if (newName.isNotEmpty()) {
+                    activity?.lifecycleScope?.launch {
+                        try {
+                            session.name = newName
+                            scanDatabase.scanDao().updateScan(session)
+                            loadScanSessions() // Reload the list
+                            Toast.makeText(context, "Scan renamed successfully", Toast.LENGTH_SHORT).show()
+                        } catch (e: Exception) {
+                            Log.e(TAG, "Error renaming scan", e)
+                            Toast.makeText(context, "Error renaming scan: ${e.message}", Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                }
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
+    }
+
+    private fun showDeleteConfirmationDialog(session: ScanSession) {
+        AlertDialog.Builder(context)
+            .setTitle("Delete Scan")
+            .setMessage("Are you sure you want to delete this scan? This action cannot be undone.")
+            .setPositiveButton("Delete") { _, _ ->
+                activity?.lifecycleScope?.launch {
+                    try {
+                        // Delete frames first (cascade delete should handle this, but being explicit)
+                        scanDatabase.frameDao().deleteFramesForScan(session.scanId)
+                        // Delete the session
+                        scanDatabase.scanDao().deleteScan(session)
+                        loadScanSessions() // Reload the list
+                        Toast.makeText(context, "Scan deleted successfully", Toast.LENGTH_SHORT).show()
+                    } catch (e: Exception) {
+                        Log.e(TAG, "Error deleting scan", e)
+                        Toast.makeText(context, "Error deleting scan: ${e.message}", Toast.LENGTH_SHORT).show()
+                    }
+                }
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
     }
     
     private fun exportSession(session: ScanSession) {
