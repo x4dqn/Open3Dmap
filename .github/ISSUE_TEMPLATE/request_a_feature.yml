@@ -1,34 +1,18 @@
-name: Feature Request
+name: Request a Feature
 description: Suggest a new feature or enhancement
 title: "[Feature]: "
 labels: [enhancement]
-assignees: []
-
 body:
   - type: markdown
     attributes:
       value: |
-        Thanks for your idea! We’re building openARMap for public good, and your input helps.
+        Got an idea to make openARMap better? Tell us more!
 
   - type: textarea
-    id: what-feature
+    id: feature
     attributes:
-      label: What's the feature or enhancement?
-      description: Be specific. What should it do?
-      placeholder: e.g., Add ability to flag low-quality scans in the viewer
+      label: What do you want to see?
+      description: Be specific — what should it do or change?
+      placeholder: Add a map overlay showing contributor activity
+    validations:
       required: true
-
-  - type: textarea
-    id: why-needed
-    attributes:
-      label: Why is it needed?
-      description: Explain the problem it solves or value it adds
-      placeholder: This helps reduce data noise and improves map quality
-      required: true
-
-  - type: textarea
-    id: context
-    attributes:
-      label: Additional context or inspiration
-      description: Link mockups, related issues, or other projects doing something similar
-      required: false
