@@ -26,10 +26,9 @@ import androidx.lifecycle.lifecycleScope
 import com.example.arcore_scanner.R
 import com.example.arcore_scanner.data.database.ScanDatabase
 import com.example.arcore_scanner.data.models.*
-import com.example.arcore_scanner.managers.UserManager
-import com.example.arcore_scanner.LoginActivity
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.floatingactionbutton.FloatingActionButton
+import com.google.android.material.progressindicator.LinearProgressIndicator
 import com.google.ar.core.*
 import com.google.ar.core.exceptions.*
 import com.google.ar.sceneform.ArSceneView
@@ -48,7 +47,8 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.BaseAdapter
-import android.widget.LinearProgressIndicator
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.collect
 
 class ARScanActivity : AppCompatActivity() {
     private var arSession: Session? = null
@@ -57,11 +57,7 @@ class ARScanActivity : AppCompatActivity() {
     private lateinit var fusedLocationClient: FusedLocationProviderClient
     private lateinit var statusText: TextView
     private lateinit var scanButton: MaterialButton
-    private lateinit var settingsButton: FloatingActionButton
     private lateinit var exportButton: FloatingActionButton
-    private lateinit var logoutButton: FloatingActionButton
-    private lateinit var userManager: UserManager
-    private lateinit var userInfoText: TextView
     private lateinit var scanProgress: LinearProgressIndicator
     
     private var currentScanSession: ScanSession? = null
@@ -83,33 +79,14 @@ class ARScanActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         
-        // Initialize UserManager
-        userManager = UserManager.getInstance(this)
-        
-        // Check if user is logged in
-        if (!userManager.isLoggedIn()) {
-            // Redirect to login activity
-            startActivity(Intent(this, LoginActivity::class.java))
-            finish()
-            return
-        }
-        
         setContentView(R.layout.activity_ar_scan)
         
         // Initialize views
         sceneView = findViewById(R.id.sceneView)
         statusText = findViewById(R.id.statusText)
         scanButton = findViewById(R.id.scanButton)
-        settingsButton = findViewById(R.id.settingsButton)
         exportButton = findViewById(R.id.exportButton)
-        logoutButton = findViewById(R.id.logoutButton)
-        userInfoText = findViewById(R.id.userInfoText)
         scanProgress = findViewById(R.id.scanProgress)
-        
-        // Set user info
-        userManager.getCurrentUser()?.let { user ->
-            userInfoText.text = "Logged in as: ${user.username}"
-        }
         
         // Initialize database
         scanDatabase = ScanDatabase.getDatabase(this)
@@ -135,8 +112,6 @@ class ARScanActivity : AppCompatActivity() {
     
     private fun initializeARCore() {
         // Check if ARCore is installed and up to date
-        statusText.text = "Checking ARCore availability..."
-        
         try {
             when (ArCoreApk.getInstance().checkAvailability(this)) {
                 ArCoreApk.Availability.SUPPORTED_INSTALLED -> {
@@ -155,7 +130,7 @@ class ARScanActivity : AppCompatActivity() {
                         
                         if (requestInstallStatus == ArCoreApk.InstallStatus.INSTALL_REQUESTED) {
                             // ARCore installation has been requested
-                            statusText.text = "ARCore installation requested. Please restart the app after installation."
+                            Toast.makeText(this, "ARCore installation requested. Please restart the app after installation.", Toast.LENGTH_LONG).show()
                             return
                         } else {
                             // ARCore is being installed, continue with session creation
@@ -163,30 +138,28 @@ class ARScanActivity : AppCompatActivity() {
                         }
                     } catch (e: Exception) {
                         Log.e(TAG, "ARCore installation failed", e)
-                        statusText.text = "Failed to install ARCore: ${e.message}"
+                        Toast.makeText(this, "Failed to install ARCore: ${e.message}", Toast.LENGTH_LONG).show()
                     }
                 }
                 ArCoreApk.Availability.UNSUPPORTED_DEVICE_NOT_CAPABLE -> {
                     // This device is not capable of running AR
-                    statusText.text = "This device does not support ARCore"
                     Toast.makeText(this, "This device does not support ARCore", Toast.LENGTH_LONG).show()
                 }
                 else -> {
                     // Handle other states
-                    statusText.text = "ARCore is not available"
                     Toast.makeText(this, "ARCore is not available", Toast.LENGTH_LONG).show()
                 }
             }
         } catch (e: Exception) {
             Log.e(TAG, "ARCore availability check failed", e)
-            statusText.text = "Error checking ARCore availability: ${e.message}"
+            Toast.makeText(this, "Error checking ARCore availability: ${e.message}", Toast.LENGTH_LONG).show()
         }
     }
     
     private fun setupARSession() {
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
             != PackageManager.PERMISSION_GRANTED) {
-            statusText.text = "Camera permission required"
+            Toast.makeText(this, "Camera permission required", Toast.LENGTH_LONG).show()
             return
         }
         
@@ -228,13 +201,12 @@ class ARScanActivity : AppCompatActivity() {
             
             // Enable scan button
             scanButton.isEnabled = true
-            statusText.text = "ARCore initialized. Ready to scan."
             
         } catch (e: UnavailableException) {
             handleARCoreException(e)
         } catch (e: Exception) {
             Log.e(TAG, "Failed to create AR session", e)
-            statusText.text = "Error initializing ARCore: ${e.message}"
+            Toast.makeText(this, "Error initializing ARCore: ${e.message}", Toast.LENGTH_LONG).show()
         }
     }
     
@@ -276,11 +248,6 @@ class ARScanActivity : AppCompatActivity() {
                 statusText.text = "Scanning in progress..."
             }
         }
-
-        settingsButton.setOnClickListener {
-            // TODO: Implement settings dialog
-            Toast.makeText(this, "Settings coming soon", Toast.LENGTH_SHORT).show()
-        }
         
         exportButton.setOnClickListener {
             if (isScanning.get()) {
@@ -289,12 +256,6 @@ class ARScanActivity : AppCompatActivity() {
             }
             Log.d(TAG, "Export button clicked")
             showExportDialog()
-        }
-
-        logoutButton.setOnClickListener {
-            userManager.logout()
-            startActivity(Intent(this, LoginActivity::class.java))
-            finish()
         }
     }
 
@@ -347,64 +308,63 @@ class ARScanActivity : AppCompatActivity() {
         // Show the export dialog
         lifecycleScope.launch {
             try {
-                scanDatabase.scanDao().getAllScans().collect { scanList: List<ScanSession> ->
-                    if (scanList.isEmpty()) {
-                        Toast.makeText(this@ARScanActivity, "No scans available to export", Toast.LENGTH_SHORT).show()
-                        return@collect
-                    }
-
-                    val dateFormat = java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss", java.util.Locale.getDefault())
-                    
-                    // Create a custom adapter for the list
-                    val adapter = object : BaseAdapter() {
-                        override fun getCount(): Int = scanList.size
-                        override fun getItem(position: Int): Any = scanList[position]
-                        override fun getItemId(position: Int): Long = position.toLong()
-                        
-                        override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
-                            val view = convertView ?: layoutInflater.inflate(R.layout.scan_list_item, parent, false)
-                            val scan = scanList[position]
-                            
-                            val scanNameText = view.findViewById<TextView>(R.id.scanNameText)
-                            val deleteButton = view.findViewById<ImageButton>(R.id.deleteButton)
-                            val renameButton = view.findViewById<ImageButton>(R.id.renameButton)
-                            
-                            // Set the scan name and timestamp
-                            scanNameText.text = scan.name ?: "Scan ${scan.scanId.take(8)} - ${dateFormat.format(java.util.Date(scan.startTime))}"
-                            
-                            // Set up delete button
-                            deleteButton.setOnClickListener {
-                                showDeleteConfirmationDialog(scan)
-                            }
-                            
-                            // Set up rename button
-                            renameButton.setOnClickListener {
-                                showRenameDialog(scan)
-                            }
-                            
-                            // Set up long press listener for the entire item
-                            view.setOnLongClickListener {
-                                showScanOptionsDialog(scan)
-                                true
-                            }
-                            
-                            // Set up click listener for the entire item
-                            view.setOnClickListener {
-                                lifecycleScope.launch {
-                                    exportMetadata(scan)
-                                }
-                            }
-                            
-                            return view
-                        }
-                    }
-
-                    AlertDialog.Builder(this@ARScanActivity)
-                        .setTitle("Select Scan to Export")
-                        .setAdapter(adapter, null)
-                        .setNegativeButton("Cancel", null)
-                        .show()
+                val scanList = scanDatabase.scanDao().getAllScans().first()
+                if (scanList.isEmpty()) {
+                    Toast.makeText(this@ARScanActivity, "No scans available to export", Toast.LENGTH_SHORT).show()
+                    return@launch
                 }
+
+                val dateFormat = java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss", java.util.Locale.getDefault())
+                
+                // Create a custom adapter for the list
+                val adapter = object : BaseAdapter() {
+                    override fun getCount(): Int = scanList.size
+                    override fun getItem(position: Int): Any = scanList[position]
+                    override fun getItemId(position: Int): Long = position.toLong()
+                    
+                    override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
+                        val view = convertView ?: layoutInflater.inflate(R.layout.scan_list_item, parent, false)
+                        val scan = scanList[position]
+                        
+                        val scanNameText = view.findViewById<TextView>(R.id.scanNameText)
+                        val deleteButton = view.findViewById<ImageButton>(R.id.deleteButton)
+                        val renameButton = view.findViewById<ImageButton>(R.id.renameButton)
+                        
+                        // Set the scan name and timestamp
+                        scanNameText.text = scan.name ?: "Scan ${scan.scanId.take(8)} - ${dateFormat.format(java.util.Date(scan.startTime))}"
+                        
+                        // Set up delete button
+                        deleteButton.setOnClickListener {
+                            showDeleteConfirmationDialog(scan)
+                        }
+                        
+                        // Set up rename button
+                        renameButton.setOnClickListener {
+                            showRenameDialog(scan)
+                        }
+                        
+                        // Set up long press listener for the entire item
+                        view.setOnLongClickListener {
+                            showScanOptionsDialog(scan)
+                            true
+                        }
+                        
+                        // Set up click listener for the entire item
+                        view.setOnClickListener {
+                            lifecycleScope.launch {
+                                exportMetadata(scan)
+                            }
+                        }
+                        
+                        return view
+                    }
+                }
+
+                AlertDialog.Builder(this@ARScanActivity)
+                    .setTitle("Select Scan to Export")
+                    .setAdapter(adapter, null)
+                    .setNegativeButton("Cancel", null)
+                    .show()
             } catch (e: Exception) {
                 Log.e(TAG, "Error showing export dialog", e)
                 Toast.makeText(this@ARScanActivity, "Error loading scans: ${e.message}", Toast.LENGTH_SHORT).show()
@@ -1369,91 +1329,87 @@ class ARScanActivity : AppCompatActivity() {
             }
 
             // Get frames from database
-            val frames = scanDatabase.frameDao().getFramesForScan(session.scanId)
+            val frameList = scanDatabase.frameDao().getFramesForScan(session.scanId).first()
             Log.d(TAG, "Retrieved frames from database for session: ${session.scanId}")
             
-            frames.collect { frameList ->
-                Log.d(TAG, "Processing ${frameList.size} frames for export")
-                
-                if (frameList.isEmpty()) {
-                    throw Exception("No frames found for session ${session.scanId}")
-                }
+            if (frameList.isEmpty()) {
+                throw Exception("No frames found for session ${session.scanId}")
+            }
 
-                // Copy images to export directory
-                val imagesDir = File(exportDir, "images")
-                if (!imagesDir.exists()) {
-                    imagesDir.mkdirs()
-                }
+            // Copy images to export directory
+            val imagesDir = File(exportDir, "images")
+            if (!imagesDir.exists()) {
+                imagesDir.mkdirs()
+            }
 
-                frameList.forEach { frame ->
-                    val sourceFile = File(getExternalFilesDir(null), "${frame.frameId}.jpg")
-                    if (sourceFile.exists()) {
-                        val destFile = File(imagesDir, "${frame.frameId}.jpg")
-                        sourceFile.copyTo(destFile, overwrite = true)
-                        Log.d(TAG, "Copied image ${frame.frameId}.jpg to export directory")
-                    } else {
-                        Log.w(TAG, "Source image not found: ${sourceFile.absolutePath}")
-                    }
+            frameList.forEach { frame ->
+                val sourceFile = File(getExternalFilesDir(null), "${frame.frameId}.jpg")
+                if (sourceFile.exists()) {
+                    val destFile = File(imagesDir, "${frame.frameId}.jpg")
+                    sourceFile.copyTo(destFile, overwrite = true)
+                    Log.d(TAG, "Copied image ${frame.frameId}.jpg to export directory")
+                } else {
+                    Log.w(TAG, "Source image not found: ${sourceFile.absolutePath}")
                 }
+            }
 
-                // Create transforms.json in INRIA format
-                val transforms = frameList.map { frame ->
-                    mapOf(
-                        "file_path" to "images/${frame.frameId}.jpg",
-                        "transform_matrix" to frame.poseMatrix.toTypedArray().toList(),
-                        "timestamp" to frame.timestamp,
-                        "gps" to mapOf(
-                            "latitude" to frame.gps?.latitude,
-                            "longitude" to frame.gps?.longitude,
-                            "altitude" to frame.gps?.altitude,
-                            "accuracy" to frame.gps?.accuracy
-                        ),
-                        "imu" to mapOf(
-                            "accelerometer" to frame.imu?.accelerometer?.toTypedArray()?.toList(),
-                            "gyroscope" to frame.imu?.gyroscope?.toTypedArray()?.toList()
-                        ),
-                        "quality" to mapOf(
-                            "pose_confidence" to frame.poseConfidence,
-                            "frame_quality" to frame.frameQualityScore
-                        )
+            // Create transforms.json in INRIA format
+            val transforms = frameList.map { frame ->
+                mapOf(
+                    "file_path" to "images/${frame.frameId}.jpg",
+                    "transform_matrix" to frame.poseMatrix.toTypedArray().toList(),
+                    "timestamp" to frame.timestamp,
+                    "gps" to mapOf(
+                        "latitude" to frame.gps?.latitude,
+                        "longitude" to frame.gps?.longitude,
+                        "altitude" to frame.gps?.altitude,
+                        "accuracy" to frame.gps?.accuracy
+                    ),
+                    "imu" to mapOf(
+                        "accelerometer" to frame.imu?.accelerometer?.toTypedArray()?.toList(),
+                        "gyroscope" to frame.imu?.gyroscope?.toTypedArray()?.toList()
+                    ),
+                    "quality" to mapOf(
+                        "pose_confidence" to frame.poseConfidence,
+                        "frame_quality" to frame.frameQualityScore
                     )
-                }
-
-                // Write transforms.json
-                val transformsFile = File(metadataDir, "transforms.json")
-                try {
-                    transformsFile.writeText(JSONObject(mapOf("frames" to transforms) as Map<String, Any>).toString(2))
-                    Log.d(TAG, "Successfully wrote transforms.json to: ${transformsFile.absolutePath}")
-                } catch (e: Exception) {
-                    Log.e(TAG, "Error writing transforms.json", e)
-                    throw e
-                }
-
-                // Write session metadata
-                val sessionMetadata = mapOf(
-                    "session_id" to session.scanId,
-                    "device_id" to session.deviceId,
-                    "device_model" to session.deviceModel,
-                    "app_version" to session.appVersion,
-                    "scan_type" to session.scanType.toString(),
-                    "start_time" to session.startTime,
-                    "end_time" to session.endTime,
-                    "frame_count" to frameList.size,
-                    "name" to session.name
                 )
+            }
 
-                val sessionFile = File(metadataDir, "session_${session.scanId}.json")
-                try {
-                    sessionFile.writeText(JSONObject(sessionMetadata as Map<String, Any>).toString(2))
-                    Log.d(TAG, "Successfully wrote session metadata to: ${sessionFile.absolutePath}")
-                } catch (e: Exception) {
-                    Log.e(TAG, "Error writing session metadata", e)
-                    throw e
-                }
+            // Write transforms.json
+            val transformsFile = File(metadataDir, "transforms.json")
+            try {
+                transformsFile.writeText(JSONObject(mapOf("frames" to transforms) as Map<String, Any>).toString(2))
+                Log.d(TAG, "Successfully wrote transforms.json to: ${transformsFile.absolutePath}")
+            } catch (e: Exception) {
+                Log.e(TAG, "Error writing transforms.json", e)
+                throw e
+            }
 
-                runOnUiThread {
-                    Toast.makeText(this@ARScanActivity, "Scan exported to: ${exportDir.absolutePath}", Toast.LENGTH_LONG).show()
-                }
+            // Write session metadata
+            val sessionMetadata = mapOf(
+                "session_id" to session.scanId,
+                "device_id" to session.deviceId,
+                "device_model" to session.deviceModel,
+                "app_version" to session.appVersion,
+                "scan_type" to session.scanType.toString(),
+                "start_time" to session.startTime,
+                "end_time" to session.endTime,
+                "frame_count" to frameList.size,
+                "name" to session.name
+            )
+
+            val sessionFile = File(metadataDir, "session_${session.scanId}.json")
+            try {
+                sessionFile.writeText(JSONObject(sessionMetadata as Map<String, Any>).toString(2))
+                Log.d(TAG, "Successfully wrote session metadata to: ${sessionFile.absolutePath}")
+            } catch (e: Exception) {
+                Log.e(TAG, "Error writing session metadata", e)
+                throw e
+            }
+
+            runOnUiThread {
+                Toast.makeText(this@ARScanActivity, "Scan exported to: ${exportDir.absolutePath}", Toast.LENGTH_LONG).show()
             }
         } catch (e: Exception) {
             Log.e(TAG, "Error exporting metadata", e)
