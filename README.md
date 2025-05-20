@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="assets/OpenARMap_Logo.png" alt="OpenARMap Logo" width="300"/>
+</p>
+
 # OpenARMap
 
 **openARMap** is a community-driven initiative to build open, GPS-anchored 3D map infrastructure for spatial computing. Our long-term goal is to enable anyone with a smartphone to help create, maintain, and govern high-fidelity digital twins of the physical world—parks, streets, buildings, and public spaces—without relying on closed platforms or proprietary systems.
