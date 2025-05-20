@@ -1,36 +1,17 @@
-name: Contributor Support
-description: Ask for help setting up or contributing to the project
+name: Contributor Help & Support
+description: Ask a question about setup, building, or contributing
 title: "[Help]: "
 labels: [question]
-assignees: []
-
 body:
   - type: markdown
     attributes:
       value: |
-        Need help getting started or setting up the pipeline? Let us know how we can assist.
-
-  - type: dropdown
-    id: area
-    attributes:
-      label: What are you working on?
-      options:
-        - Building the Android app
-        - Working on the reconstruction pipeline
-        - Writing docs or metadata tooling
-        - Exploring the viewer / web frontend
-        - Other
+        Need help setting up the app or pipeline? Ask here.
 
   - type: textarea
-    id: issue
+    id: help
     attributes:
       label: What do you need help with?
-      placeholder: e.g., I’m getting a gradle sync error when building the Android app
+      placeholder: I can't build the Android app on Pixel 6
+    validations:
       required: true
-
-  - type: textarea
-    id: context
-    attributes:
-      label: Additional context
-      description: Environment info, screenshots, errors, etc.
-      required: false
