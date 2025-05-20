@@ -3,6 +3,7 @@
 *.aar
 *.ap_
 *.aab
+FakeDependency.jar
 
 # Files for the ART/Dalvik VM
 *.dex
@@ -25,6 +26,13 @@ local.properties
 gradle-app.setting
 !gradle-wrapper.jar
 .gradletasknamecache
+
+# Gradle Daemon logs (contain IP addresses)
+daemon/
+daemon-*.out.log
+daemon-*.log
+daemon-*.pid
+daemon-*.properties
 
 # Android Studio
 *.iml
@@ -110,8 +118,8 @@ ehthumbs.db
 Thumbs.db
 
 # Project specific
-colmap/
-native/
-daemon/
-android/
-wrapper/ 
+../colmap/
+../native/
+../daemon/
+../android/
+../wrapper/ 
