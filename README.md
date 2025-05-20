@@ -17,7 +17,6 @@ The full openARMap platform will eventually include:
 - Open APIs for external integrations
 - Scan validation and composability tools
 - Offline-first or low-connectivity capture modes
-- Educational modules for classroom and community use
 
 We're releasing this early-stage app to kickstart development, invite collaborators, and begin testing participatory mobile scanning in real-world conditions.
 
@@ -27,7 +26,7 @@ We're releasing this early-stage app to kickstart development, invite collaborat
 This repository will contain the **entire openARMap pipeline**, including:
 
 -  The mobile app (this component)
--  Reconstruction pipeline using mobile-optimized Gaussian splatting
+-  A custom reconstruction pipeline using mobile-optimized Gaussian splatting
 - GPS + VIO-based global alignment and relocalization
 -  Visualization tools and scan quality viewers
 -  Privacy-preserving tools and contributor governance system
