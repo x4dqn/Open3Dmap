@@ -14,15 +14,15 @@ captures/
 bin/
 gen/
 out/
-bot/.gradle/
-bot/build/
-bot/app/build/
-bot/app/captures/
-bot/app/.externalNativeBuild/
-bot/app/.cxx/
-bot/app/bin/
-bot/app/gen/
-bot/app/out/
+Build/.gradle/
+Build/build/
+Build/app/build/
+Build/app/captures/
+Build/app/.externalNativeBuild/
+Build/app/.cxx/
+Build/app/bin/
+Build/app/gen/
+Build/app/out/
 
 # Gradle wrapper logs
 gradle/wrapper/gradle-wrapper.log
@@ -72,4 +72,4 @@ ehthumbs.db
 Desktop.ini
 
 # Others
-bot/.idea/ 
+Build/.idea/ 
