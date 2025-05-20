@@ -1,2 +1,0 @@
-# 3D point list with one line of data per point:
-# POINT3D_ID, X, Y, Z, R, G, B, ERROR, TRACK[] as (IMAGE_ID, POINT2D_IDX)
