@@ -22,6 +22,9 @@ captures/
 .externalNativeBuild/
 .cxx/
 local.properties
+gradle-app.setting
+!gradle-wrapper.jar
+.gradletasknamecache
 
 # Android Studio
 *.iml
@@ -29,6 +32,19 @@ local.properties
 .DS_Store
 .navigation/
 output.json
+*.ipr
+*.iws
+*.swp
+*.swo
+.idea/workspace.xml
+.idea/tasks.xml
+.idea/gradle.xml
+.idea/assetWizardSettings.xml
+.idea/dictionaries
+.idea/libraries
+.idea/caches
+.idea/modules.xml
+.idea/navEditor.xml
 
 # ARCore specific
 *.arcore
@@ -58,4 +74,44 @@ OpenARMaps/
 lint/intermediates/
 lint/generated/
 lint/outputs/
-lint/tmp/ 
+lint/tmp/
+
+# NDK
+.externalNativeBuild/
+.cxx/
+*.o
+*.so
+*.a
+
+# CMake
+cmake/
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+Makefile
+
+# Temporary files
+*.tmp
+*.bak
+*.swp
+*~.nib
+local.properties
+*.orig
+*.rej
+*.log.*
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Project specific
+colmap/
+native/
+daemon/
+android/
+wrapper/ 
