@@ -26,6 +26,8 @@ import androidx.lifecycle.lifecycleScope
 import com.example.arcore_scanner.R
 import com.example.arcore_scanner.data.database.ScanDatabase
 import com.example.arcore_scanner.data.models.*
+import com.example.arcore_scanner.managers.UserManager
+import com.example.arcore_scanner.LoginActivity
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.ar.core.*
@@ -46,6 +48,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.BaseAdapter
+import android.widget.LinearProgressIndicator
 
 class ARScanActivity : AppCompatActivity() {
     private var arSession: Session? = null
@@ -56,6 +59,10 @@ class ARScanActivity : AppCompatActivity() {
     private lateinit var scanButton: MaterialButton
     private lateinit var settingsButton: FloatingActionButton
     private lateinit var exportButton: FloatingActionButton
+    private lateinit var logoutButton: FloatingActionButton
+    private lateinit var userManager: UserManager
+    private lateinit var userInfoText: TextView
+    private lateinit var scanProgress: LinearProgressIndicator
     
     private var currentScanSession: ScanSession? = null
     private var frameCount = 0
@@ -75,6 +82,18 @@ class ARScanActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        
+        // Initialize UserManager
+        userManager = UserManager.getInstance(this)
+        
+        // Check if user is logged in
+        if (!userManager.isLoggedIn()) {
+            // Redirect to login activity
+            startActivity(Intent(this, LoginActivity::class.java))
+            finish()
+            return
+        }
+        
         setContentView(R.layout.activity_ar_scan)
         
         // Initialize views
@@ -83,6 +102,14 @@ class ARScanActivity : AppCompatActivity() {
         scanButton = findViewById(R.id.scanButton)
         settingsButton = findViewById(R.id.settingsButton)
         exportButton = findViewById(R.id.exportButton)
+        logoutButton = findViewById(R.id.logoutButton)
+        userInfoText = findViewById(R.id.userInfoText)
+        scanProgress = findViewById(R.id.scanProgress)
+        
+        // Set user info
+        userManager.getCurrentUser()?.let { user ->
+            userInfoText.text = "Logged in as: ${user.username}"
+        }
         
         // Initialize database
         scanDatabase = ScanDatabase.getDatabase(this)
@@ -237,10 +264,15 @@ class ARScanActivity : AppCompatActivity() {
             if (isScanning.get()) {
                 stopScanning()
                 scanButton.text = "Start Scan"
+                scanButton.setIconResource(android.R.drawable.ic_menu_camera)
+                scanProgress.visibility = View.GONE
                 statusText.text = "Scan stopped"
             } else {
                 startScanning()
                 scanButton.text = "Stop Scan"
+                scanButton.setIconResource(android.R.drawable.ic_menu_close_clear_cancel)
+                scanProgress.visibility = View.VISIBLE
+                scanProgress.isIndeterminate = true
                 statusText.text = "Scanning in progress..."
             }
         }
@@ -257,6 +289,12 @@ class ARScanActivity : AppCompatActivity() {
             }
             Log.d(TAG, "Export button clicked")
             showExportDialog()
+        }
+
+        logoutButton.setOnClickListener {
+            userManager.logout()
+            startActivity(Intent(this, LoginActivity::class.java))
+            finish()
         }
     }
 
@@ -651,6 +689,8 @@ class ARScanActivity : AppCompatActivity() {
                 isScanning.set(false)
                 runOnUiThread {
                     scanButton.text = "Start Scan"
+                    scanButton.setIconResource(android.R.drawable.ic_menu_camera)
+                    scanProgress.visibility = View.GONE
                     statusText.text = "Scan stopped"
                 }
             } catch (e: Exception) {
@@ -724,6 +764,8 @@ class ARScanActivity : AppCompatActivity() {
                         statusText.text = "Frames: $frameCount"
                     }
                     scanButton.isEnabled = true
+                    scanProgress.isIndeterminate = false
+                    scanProgress.progress = (frameCount % 100)
                 }
                 TrackingState.PAUSED -> {
                     // Get the current frame to check tracking failure reason
@@ -737,14 +779,18 @@ class ARScanActivity : AppCompatActivity() {
                         else -> "Unknown"
                     }
                     statusText.text = "Tracking paused: $reason. Move device slowly."
+                    scanProgress.isIndeterminate = true
                     // Keep scan button enabled to allow users to stop a scan
                 }
                 TrackingState.STOPPED -> {
                     statusText.text = "Tracking lost. Try restarting the scan."
+                    scanProgress.isIndeterminate = true
                     // Consider stopping the scan automatically here
                     if (isScanning.get()) {
                         stopScanning()
                         scanButton.text = "Start Scan"
+                        scanButton.setIconResource(android.R.drawable.ic_menu_camera)
+                        scanProgress.visibility = View.GONE
                         Toast.makeText(this@ARScanActivity, 
                             "Scan stopped due to tracking loss", 
                             Toast.LENGTH_SHORT).show()
