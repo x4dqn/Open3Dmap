@@ -27,6 +27,7 @@ At this stage, the repository includes only the Android app for data capture. Fu
 
 The sections below refer specifically to the mobile capture tool. If you're looking to test early scanning workflows or contribute to real-world spatial data collection, you're in the right place.
 
+## Mobile App for Data Capture — Features
 
 ## Features
 
