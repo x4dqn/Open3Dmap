@@ -1,6 +1,32 @@
 # OpenARMap
 
-OpenARMap is an Android application designed to capture high-quality AR data for use with the INRIA Gaussian Splatting pipeline. The app uses ARCore for accurate camera tracking and pose estimation, making it ideal for creating detailed 3D reconstructions of indoor and outdoor spaces.
+**openARMap** is a community-driven initiative to build open, GPS-anchored 3D map infrastructure for spatial computing. Our long-term goal is to enable anyone with a smartphone to help create, maintain, and govern high-fidelity digital twins of the physical world—parks, streets, buildings, and public spaces—without relying on closed platforms or proprietary systems.
+
+This repository contains the **first component** of that system: an Android application for capturing high-quality spatial data. The app records image sequences, camera poses (via ARCore), GPS coordinates, and IMU sensor data. This forms the foundation for downstream processing into 3D reconstructions and Earth-anchored localization.
+
+The full openARMap platform will eventually include:
+- A reconstruction pipeline using mobile-optimized Gaussian splatting
+- Alignment tools to anchor scans globally using VIO + GPS
+- Real-time feedback and scan quality visualization
+- Contributor dashboards, privacy controls, and governance features
+
+We're releasing this early-stage app to kickstart development, invite collaborators, and begin testing participatory mobile scanning in real-world conditions.
+
+
+## About This Repository
+
+This repository will contain the entire openARMap pipeline, including:
+
+-  The mobile app (this component)
+-  Reconstruction pipeline using mobile-optimized Gaussian splatting
+- GPS + VIO-based global alignment and relocalization
+-  Visualization tools and scan quality viewers
+-  Privacy-preserving tools and contributor governance system
+
+At this stage, the repository includes only the Android app for data capture. Future components will be added here incrementally as they are developed and tested.
+
+The sections below refer specifically to the mobile capture tool. If you're looking to test early scanning workflows or contribute to real-world spatial data collection, you're in the right place.
+
 
 ## Features
 
