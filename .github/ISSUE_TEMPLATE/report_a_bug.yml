@@ -6,12 +6,20 @@ body:
   - type: markdown
     attributes:
       value: |
-        Thanks for helping improve openARMap!
+        Thanks for helping improve openARMap! Please describe the issue below.
 
   - type: textarea
     id: what-happened
     attributes:
       label: What happened?
-      description: Describe the issue clearly
+      description: Describe the issue clearly.
       placeholder: e.g. The scan didn't save after pressing Stop
+    validations:
       required: true
+
+  - type: input
+    id: device-info
+    attributes:
+      label: Device Info
+      description: Device model and OS version (optional)
+      placeholder: Pixel 6, Android 14
