@@ -5,17 +5,26 @@
 This repository contains the **first component** of that system: an Android application for capturing high-quality spatial data. The app records image sequences, camera poses (via ARCore), GPS coordinates, and IMU sensor data. This forms the foundation for downstream processing into 3D reconstructions and Earth-anchored localization.
 
 The full openARMap platform will eventually include:
-- A reconstruction pipeline using mobile-optimized Gaussian splatting
+
+- A reconstruction pipeline extending INRIA’s Gaussian splatting, optimized for mobile and civic-scale use
+- A public-facing web viewer to explore contributed 3D scans on a map
 - Alignment tools to anchor scans globally using VIO + GPS
 - Real-time feedback and scan quality visualization
 - Contributor dashboards, privacy controls, and governance features
+- Support for spatial querying, scan overlays, and metadata-rich exploration through a browser-based interface
+- Temporal versioning and change detection tools
+- Contributor progression and community roles
+- Open APIs for external integrations
+- Scan validation and composability tools
+- Offline-first or low-connectivity capture modes
+- Educational modules for classroom and community use
 
 We're releasing this early-stage app to kickstart development, invite collaborators, and begin testing participatory mobile scanning in real-world conditions.
 
 
 ## About This Repository
 
-This repository will contain the entire openARMap pipeline, including:
+This repository will contain the **entire openARMap pipeline**, including:
 
 -  The mobile app (this component)
 -  Reconstruction pipeline using mobile-optimized Gaussian splatting
@@ -23,11 +32,11 @@ This repository will contain the entire openARMap pipeline, including:
 -  Visualization tools and scan quality viewers
 -  Privacy-preserving tools and contributor governance system
 
-At this stage, the repository includes only the Android app for data capture. Future components will be added here incrementally as they are developed and tested.
+At this stage, the repository includes **only the Android app** for data capture. Future components will be added here incrementally as they are developed and tested.
 
 The sections below refer specifically to the mobile capture tool. If you're looking to test early scanning workflows or contribute to real-world spatial data collection, you're in the right place.
 
-## Mobile App for Data Capture — Features
+## Mobile App for Data Capture
 
 ## Features
 
@@ -58,7 +67,7 @@ cd OpenARMap
 2. Open the project in Android Studio:
    - Open Android Studio
    - Select "Open an existing project"
-   - Navigate to the `Android App/Bot` directory
+   - Navigate to the `AndroidApp/Bot` directory
    - Click "OK"
 
 3. Build and run:
