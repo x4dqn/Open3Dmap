@@ -1,0 +1,17 @@
+name: Contributor Help & Support
+description: Ask a question about setup, building, or contributing
+title: "[Help]: "
+labels: [question]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Need help setting up the app or pipeline? Ask here.
+
+  - type: textarea
+    id: help
+    attributes:
+      label: What do you need help with?
+      placeholder: I can't build the Android app on Pixel 6
+    validations:
+      required: true

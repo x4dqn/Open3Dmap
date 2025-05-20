@@ -1,0 +1,18 @@
+name: Request a Feature
+description: Suggest a new feature or enhancement
+title: "[Feature]: "
+labels: [enhancement]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Got an idea to make openARMap better? Tell us more!
+
+  - type: textarea
+    id: feature
+    attributes:
+      label: What do you want to see?
+      description: Be specific — what should it do or change?
+      placeholder: Add a map overlay showing contributor activity
+    validations:
+      required: true
