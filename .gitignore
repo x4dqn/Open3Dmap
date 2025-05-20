@@ -26,7 +26,7 @@ gradle-app.setting
 !gradle-wrapper.jar
 .gradletasknamecache
 
-# Gradle Daemon logs (contain IP addresses)
+# Gradle Daemon logs
 daemon/
 daemon-*.out.log
 daemon-*.log
@@ -61,7 +61,7 @@ output.json
 *.jks
 *.keystore
 
-# Google Services (e.g. APIs or Firebase)
+# Google Services
 google-services.json
 
 # Version control
