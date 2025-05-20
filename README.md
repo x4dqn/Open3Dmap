@@ -27,7 +27,7 @@ We're releasing this early-stage app to kickstart development, invite collaborat
 
 ## About This Repository
 
-This repository will contain the **entire openARMap pipeline**, including:
+This repository will contain the **entire OpenARMap pipeline**, including:
 
 -  The mobile app (this component)
 -  A custom reconstruction pipeline using mobile-optimized Gaussian splatting
