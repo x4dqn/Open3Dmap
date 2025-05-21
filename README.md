@@ -8,6 +8,10 @@
 
 This repository contains the **first component** of that system: an Android application for capturing high-quality spatial data. The app records image sequences, camera poses (via ARCore), GPS coordinates, and IMU sensor data. This forms the foundation for downstream processing into 3D reconstructions and Earth-anchored localization.
 
+We’re releasing this early-stage tool to kickstart development, invite collaborators, and begin testing participatory mobile scanning in real-world conditions.
+
+## Platform Roadmap
+
 The full OpenARMap platform will eventually include:
 
 - A reconstruction pipeline extending INRIA’s Gaussian splatting, optimized for mobile and civic-scale use
@@ -22,7 +26,8 @@ The full OpenARMap platform will eventually include:
 - Scan validation and composability tools
 - Offline-first or low-connectivity capture modes
 
-We're releasing this early-stage app to kickstart development, invite collaborators, and begin testing participatory mobile scanning in real-world conditions.
+At this stage, the repository includes **only the Android app** for data capture. Future components will be added here incrementally as they are developed and tested.
+
 
 ## Coming Soon: Contributor Login and Cloud Pipeline
 
@@ -40,17 +45,6 @@ In parallel, we’re also expanding the app’s capabilities — improving metad
 
 This functionality is under active development and will be gradually released through this repository.
 
-## About This Repository
-
-This repository will contain the **entire OpenARMap pipeline**, including:
-
--  The mobile app (this component)
--  A custom reconstruction pipeline using mobile-optimized Gaussian splatting
-- GPS + VIO-based global alignment and relocalization
--  Visualization tools and scan quality viewers
--  Privacy-preserving tools and contributor governance system
-
-At this stage, the repository includes **only the Android app** for data capture. Future components will be added here incrementally as they are developed and tested.
 
 ## Mobile App for Data Capture
 
