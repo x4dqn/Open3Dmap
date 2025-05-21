@@ -189,5 +189,5 @@ This project is licensed under CC BY-NC 4.0 - see the LICENSE file for details.
 ## Acknowledgments
 
 - ARCore team for the excellent tracking capabilities
-- INRIA team for the Gaussian Splatting pipeline
+- INRIA team for their work on [3D Gaussian Splatting](https://repo-sam.inria.fr/fungraph/3d-gaussian-splatting/)
 - All contributors and users of the project
