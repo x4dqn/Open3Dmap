@@ -24,6 +24,19 @@ The full OpenARMap platform will eventually include:
 
 We're releasing this early-stage app to kickstart development, invite collaborators, and begin testing participatory mobile scanning in real-world conditions.
 
+## About This Repository
+
+This repository will contain the **entire OpenARMap pipeline**, including:
+
+-  The mobile app (this component)
+-  A custom reconstruction pipeline using mobile-optimized Gaussian splatting
+- GPS + VIO-based global alignment and relocalization
+-  Visualization tools and scan quality viewers
+-  Privacy-preserving tools and contributor governance system
+
+At this stage, the repository includes **only the Android app** for data capture. Future components will be added here incrementally as they are developed and tested.
+
+
 # Coming Soon: Contributor Login and Cloud Pipeline
 
 We are currently working on user authentication and a connected pipeline. The goal is to enable contributors to:
@@ -40,21 +53,9 @@ In parallel, we’re also expanding the app’s capabilities — improving metad
 
 This functionality is under active development and will be gradually released through this repository.
 
-## About This Repository
-
-This repository will contain the **entire OpenARMap pipeline**, including:
-
--  The mobile app (this component)
--  A custom reconstruction pipeline using mobile-optimized Gaussian splatting
-- GPS + VIO-based global alignment and relocalization
--  Visualization tools and scan quality viewers
--  Privacy-preserving tools and contributor governance system
-
-At this stage, the repository includes **only the Android app** for data capture. Future components will be added here incrementally as they are developed and tested.
+## Mobile App for Data Capture
 
 The sections below refer specifically to the mobile capture tool. If you're looking to test early scanning workflows or contribute to real-world spatial data collection, you're in the right place.
-
-## Mobile App for Data Capture
 
 ## Features
 
