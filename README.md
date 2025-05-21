@@ -4,11 +4,11 @@
 
 # OpenARMap
 
-**openARMap** is a community-driven initiative to build open, GPS-anchored 3D map infrastructure for spatial computing. Our long-term goal is to enable anyone with a smartphone to help create, maintain, and govern high-fidelity digital twins of the physical world—parks, streets, buildings, and public spaces—without relying on closed platforms or proprietary systems.
+**OpenARMap** is a community-driven initiative to build open, GPS-anchored 3D map infrastructure for spatial computing. Our long-term goal is to enable anyone with a smartphone to help create, maintain, and govern high-fidelity digital twins of the physical world—parks, streets, buildings, and public spaces—without relying on closed platforms or proprietary systems.
 
 This repository contains the **first component** of that system: an Android application for capturing high-quality spatial data. The app records image sequences, camera poses (via ARCore), GPS coordinates, and IMU sensor data. This forms the foundation for downstream processing into 3D reconstructions and Earth-anchored localization.
 
-The full openARMap platform will eventually include:
+The full OpenARMap platform will eventually include:
 
 - A reconstruction pipeline extending INRIA’s Gaussian splatting, optimized for mobile and civic-scale use
 - A public-facing web viewer to explore contributed 3D scans on a map
@@ -24,6 +24,21 @@ The full openARMap platform will eventually include:
 
 We're releasing this early-stage app to kickstart development, invite collaborators, and begin testing participatory mobile scanning in real-world conditions.
 
+# Coming Soon: Contributor Login and Cloud Pipeline
+
+We are currently working on user authentication and a connected pipeline. The goal is to enable contributors to:
+
+- Log in on their mobile device (initially via email-based auth)
+
+- Capture scans using the openARMap Android app
+
+- Export scans directly to the cloud
+
+- View their uploaded scan metadata on a web interface, with filtering and visualization tools
+
+In parallel, we’re also expanding the app’s capabilities — improving metadata capture, backend integration, and laying the groundwork for future features like contributor identity, scan validation, and sync status.
+
+This functionality is under active development and will be gradually released through this repository.
 
 ## About This Repository
 
