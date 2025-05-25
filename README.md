@@ -22,10 +22,12 @@ We’re releasing this early-stage mobile app to kickstart development, invite c
 The full OpenARMap platform will eventually include:
 
 **1. Mobile Capture App**
-- Real-time 3D scanning via Gaussian splatting
-- ARCore/ARKit-based camera pose tracking
-- GPS and IMU anchoring
-- Offline-first scan mode with local storage
+- Integrated Gaussian splat rendering and real-time feedback
+- Manual scan upload and contributor login flow
+- Incremental scan extension to grow existing scenes
+- Offline-first capture with later sync to cloud
+- On-device suggestions for scan alignment and rescan prompts
+- iOS version and cross-device consistency tooling
 
 **2. Cloud Processing & Metadata**
 - A fast, mobile-optimized reconstruction pipeline using 3D Gaussian splatting, built for ease of use, contributor feedback, and civic-scale mapping
