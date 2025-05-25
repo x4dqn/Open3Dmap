@@ -18,9 +18,8 @@ We’re releasing this early-stage mobile app to kickstart development, invite c
 
 ## Platform Roadmap
 
-The full OpenARMap platform will eventually include:
-
 ### Core Platform Components
+The full OpenARMap platform will eventually include:
 
 **1. Mobile Capture App**
 - Real-time 3D scanning via Gaussian splatting
@@ -32,12 +31,14 @@ The full OpenARMap platform will eventually include:
 - A fast, mobile-optimized reconstruction pipeline using 3D Gaussian splatting, built for ease of use, contributor feedback, and civic-scale mapping
 - Auto-generated `.splatjson` metadata files
 - Scan quality validation (coverage, density, drift)
+- Scene composability: support for merging overlapping scans into larger environments
 - Privacy filtering (PII blurring, licensing tags)
+- Incremental scan integration: enable contributors to extend, update, and refine existing scans collaboratively
 
 **3. Web Portal and Dashboard**
 - Map-based scan viewer and explorer
 - Contributor dashboards and scan management
-- Export options: `.splat`, `.glb`, `.ply`, `.splatjson`, `.usdz`
+- Export options: .splat, .splatjson, .glb, .ply, .usdz, .obj
 - Contributor-defined license controls (e.g., CC-BY, CC0)
 - Spatial querying, filtering, and version history
 
@@ -45,7 +46,7 @@ The full OpenARMap platform will eventually include:
 - Public API for scan retrieval, query, and integration
 - SDKs for Unity, WebXR, Cesium
 - `.splatjson`: standardized, georeferenced scan metadata
-- GeoPose and OGC-aligned anchoring support
+- GeoPose and OGC-aligned anchoring support  for global interoperability
 
 ### Participatory Infrastructure Roadmap
 
@@ -71,6 +72,7 @@ The full OpenARMap platform will eventually include:
 - Versioning and time-indexing for rescan comparison
 - Change detection tooling (construction, decay, updates)
 - Scheduled re-scan requests and community-driven update tasks
+- Incremental scanning support to grow scenes over time while maintaining spatial consistency
 <!--
 
 **9. Long-Term AI Infrastructure**
