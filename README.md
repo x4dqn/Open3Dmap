@@ -12,7 +12,7 @@ We believe spatial computing should be public infrastructure. OpenARMap is how w
 
 This repository contains the **first component** of that system: an Android application for capturing high-quality spatial data. The app records image sequences, camera poses (via ARCore), GPS coordinates, and IMU sensor data. This forms the foundation for downstream processing into 3D reconstructions and Earth-anchored localization.
 
-While the current focus is on mobile capture, this repository will eventually house the full OpenARMap codebase, including reconstruction tools, metadata generation, cloud pipelines, and web-based visualization. We're releasing this early to kickstart development, invite collaborators, and begin testing participatory mobile scanning in real-world conditions.
+While the current focus is on mobile capture, this repository will eventually house the full OpenARMap codebase, including reconstruction tools, metadata generation, cloud pipelines, and web-based visualization. 
 
 We’re releasing this early-stage mobile app to kickstart development, invite collaborators, and begin testing participatory mobile scanning in real-world conditions.
 
