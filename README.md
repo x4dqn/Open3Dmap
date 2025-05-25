@@ -20,23 +20,64 @@ We’re releasing this early-stage mobile app to kickstart development, invite c
 
 The full OpenARMap platform will eventually include:
 
-- A reconstruction pipeline extending INRIA’s Gaussian splatting, optimized for mobile and civic-scale use
-- A public-facing web viewer to explore contributed 3D scans on a map
-- Alignment tools that combine GPS and VIO data to accurately place scans in the global coordinate system, including support for correcting orientation/scale and anchoring via visual markers when GPS is unreliable.
-- Custom metadata format (.splatjson) for each scan, containing global coordinates, orientation, device and capture metadata, privacy settings, and file links—enabling integration with viewers, maps, and spatial computing platforms
-- Real-time feedback and scan quality visualization
-- In-app guidance and tips for scanning in diverse environments
-- Contributor dashboards, privacy controls, and governance features
-- Contributor-defined licensing (e.g., CC-BY, CC0) and scan visibility settings
-- Support for spatial querying, scan overlays, and metadata-rich exploration through a browser-based interface
-- Web-based tools for labeling, describing, and organizing scans; supporting creative reuse (e.g. styling, tagging, forked versions) and curated public collections.
-- Support for tracking changes to the same location over time (e.g., rescan comparisons, version history), enabling environmental monitoring or historical reconstruction.
-- Role-based system that recognizes contributions (e.g., novice → trusted mapper), supports moderation privileges, and encourages long-term engagement.
-- Open APIs for external integrations
-- Developer SDKs and integration examples for Unity, WebXR, and Cesium
-- Sample datasets and onboarding tools for new contributors and educators
-- Tools to check scan quality, reject duplicates, and merge multiple scans of the same location into larger composite scenes.
-- Offline-first or low-connectivity capture modes
+### Core Platform Components
+
+**1. Mobile Capture App**
+- Real-time 3D scanning via Gaussian splatting
+- ARCore/ARKit-based camera pose tracking
+- GPS and IMU anchoring
+- Offline-first scan mode with local storage
+
+**2. Cloud Processing & Metadata**
+- A fast, mobile-optimized reconstruction pipeline using 3D Gaussian splatting, built for ease of use, contributor feedback, and civic-scale mapping
+- Auto-generated `.splatjson` metadata files
+- Scan quality validation (coverage, density, drift)
+- Privacy filtering (PII blurring, licensing tags)
+
+**3. Web Portal and Dashboard**
+- Map-based scan viewer and explorer
+- Contributor dashboards and scan management
+- Export options: `.splat`, `.glb`, `.ply`, `.splatjson`, `.usdz`
+- Contributor-defined license controls (e.g., CC-BY, CC0)
+- Spatial querying, filtering, and version history
+
+**4. Open Standards and Developer Access**
+- Public API for scan retrieval, query, and integration
+- SDKs for Unity, WebXR, Cesium
+- `.splatjson`: standardized, georeferenced scan metadata
+- GeoPose and OGC-aligned anchoring support
+
+### Participatory Infrastructure Roadmap
+
+**5. Governance and Community Tools**
+- Role-based contributor system (novice → steward)
+- Transparent moderation tools (flag, audit, review)
+- Reputation system and scan attribution
+- Opt-in visibility and ethical scanning defaults
+
+**6. Import and Federation**
+- Import pipeline from Polycam, Luma, and Scaniverse
+- Open adapters to convert proprietary formats into `.splatjson`
+- Federated hosting (museums, cities, collectives)
+- Contributor-driven metadata overlays (annotations, stories, tours)
+
+**7. Discovery and Social Layer**
+- Public feed and scan activity heatmaps
+- Followable mappers and region-based community hubs
+- AR “Moments” from OpenStreetMap-style interface
+- Collaborative collections and spatial storytelling layers
+
+**8. Temporal Maintenance**
+- Versioning and time-indexing for rescan comparison
+- Change detection tooling (construction, decay, updates)
+- Scheduled re-scan requests and community-driven update tasks
+<!--
+
+**9. Long-Term AI Infrastructure**
+- Tools for training spatial-AI models on splats
+- Semantic tagging and scene segmentation
+- Open datasets for accessibility, robotics, and urban research
+-->
 
 At this stage, the repository includes only the Android app for data capture. Future components—including cloud processing, metadata generation, and web-based visualization—will be added incrementally as they are developed and tested.
 
