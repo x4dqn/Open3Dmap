@@ -16,35 +16,39 @@ The full OpenARMap platform will eventually include:
 
 - A reconstruction pipeline extending INRIA’s Gaussian splatting, optimized for mobile and civic-scale use
 - A public-facing web viewer to explore contributed 3D scans on a map
-- Alignment tools to anchor scans globally using VIO + GPS
+- Alignment tools that combine GPS and VIO data to accurately place scans in the global coordinate system, including support for correcting orientation/scale and anchoring via visual markers when GPS is unreliable.
+- Custom metadata format (.splatjson) for each scan, containing global coordinates, orientation, device and capture metadata, privacy settings, and file links—enabling integration with viewers, maps, and spatial computing platforms
 - Real-time feedback and scan quality visualization
+- In-app guidance and tips for scanning in diverse environments
 - Contributor dashboards, privacy controls, and governance features
+- Contributor-defined licensing (e.g., CC-BY, CC0) and scan visibility settings
 - Support for spatial querying, scan overlays, and metadata-rich exploration through a browser-based interface
-- Temporal versioning and change detection tools
-- Contributor progression and community roles
+- Web-based tools for labeling, describing, and organizing scans; supporting creative reuse (e.g. styling, tagging, forked versions) and curated public collections.
+- Support for tracking changes to the same location over time (e.g., rescan comparisons, version history), enabling environmental monitoring or historical reconstruction.
+- Role-based system that recognizes contributions (e.g., novice → trusted mapper), supports moderation privileges, and encourages long-term engagement.
 - Open APIs for external integrations
-- Scan validation and composability tools
+- Developer SDKs and integration examples for Unity, WebXR, and Cesium
+- Sample datasets and onboarding tools for new contributors and educators
+- Tools to check scan quality, reject duplicates, and merge multiple scans of the same location into larger composite scenes.
 - Offline-first or low-connectivity capture modes
 
-At this stage, the repository includes **only the Android app** for data capture. Future components will be added here incrementally as they are developed and tested.
+At this stage, the repository includes only the Android app for data capture. Future components—including cloud processing, metadata generation, and web-based visualization—will be added incrementally as they are developed and tested.
 
 
 ## Coming Soon: Contributor Login and Cloud Pipeline
 
-We are currently working on user authentication and a connected pipeline. The goal is to enable contributors to:
+We are actively building out user authentication and cloud integration to support a seamless contributor workflow. This will enable users to:
 
-- Log in on their mobile device (initially via email-based auth)
+- Log in via email-based authentication (mobile-first)
+- Capture scans using the OpenARMap Android app
+- Upload scans directly to the cloud
+- View and manage their uploaded scans on the web, including metadata, filtering, and map-based visualization
 
-- Capture scans using the openARMap Android app
+As part of this pipeline, each scan will be automatically paired with a structured .splatjson metadata file. This file contains GPS coordinates, orientation, device and capture metadata, file URLs, and licensing information—enabling integration with maps, viewers, and third-party spatial tools.
 
-- Export scans directly to the cloud
+We are also enhancing the mobile app to support more complete metadata capture, backend integration, and foundational features such as contributor identity, scan validation, and sync status tracking.
 
-- View their uploaded scan metadata on a web interface, with filtering and visualization tools
-
-In parallel, we’re also expanding the app’s capabilities — improving metadata capture, backend integration, and laying the groundwork for future features like contributor identity, scan validation, and sync status.
-
-This functionality is under active development and will be gradually released through this repository.
-
+These features are under active development and will be released incrementally through this repository.
 
 ## Mobile App for Data Capture
 
@@ -109,7 +113,7 @@ cd OpenARMap
 - **Delete**: Use the delete button or long-press menu
 - **View Details**: Tap a scan to see its details
 
-### Export Format
+### Export File Structure
 
 The app exports data in a format compatible with the INRIA Gaussian Splatting pipeline:
 
@@ -123,6 +127,7 @@ OpenARMaps/Exports/
     └── metadata/
         ├── transforms.json
         └── session_[ID].json
+        └── scan_id.splatjson   <-- (coming soon)
 ```
 
 ## Using with INRIA Gaussian Splatting
