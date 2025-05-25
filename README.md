@@ -4,11 +4,17 @@
 
 # OpenARMap
 
-**OpenARMap** is a community-driven initiative to build open, GPS-anchored 3D map infrastructure for spatial computing. Our long-term goal is to enable anyone with a smartphone to help create, maintain, and govern high-fidelity digital twins of the physical world—parks, streets, buildings, and public spaces—without relying on closed platforms or proprietary systems.
+**OpenARMap** is a community-driven initiative to build open, GPS-anchored 3D map infrastructure for spatial computing. Our goal is to enable anyone with a smartphone to capture, share, and reuse high-fidelity scans of the physical world—streets, parks, buildings, and public spaces—without relying on closed platforms or proprietary ecosystems.
+
+Every scan becomes part of a living digital twin: anchored with transparent metadata (.splatjson), freely exportable, and interoperable with tools like Unity, WebXR, and Cesium. From education and research to public art and civic planning, OpenARMap is designed to support open participation, long-term accessibility, and real-world utility.
+
+We believe spatial computing should be public infrastructure. OpenARMap is how we build it—together.
 
 This repository contains the **first component** of that system: an Android application for capturing high-quality spatial data. The app records image sequences, camera poses (via ARCore), GPS coordinates, and IMU sensor data. This forms the foundation for downstream processing into 3D reconstructions and Earth-anchored localization.
 
-We’re releasing this early-stage tool to kickstart development, invite collaborators, and begin testing participatory mobile scanning in real-world conditions.
+While the current focus is on mobile capture, this repository will eventually house the full OpenARMap codebase, including reconstruction tools, metadata generation, cloud pipelines, and web-based visualization. We're releasing this early to kickstart development, invite collaborators, and begin testing participatory mobile scanning in real-world conditions.
+
+We’re releasing this early-stage mobile app to kickstart development, invite collaborators, and begin testing participatory mobile scanning in real-world conditions.
 
 ## Platform Roadmap
 
@@ -51,6 +57,8 @@ We are also enhancing the mobile app to support more complete metadata capture, 
 These features are under active development and will be released incrementally through this repository.
 
 ## Mobile App for Data Capture
+
+The OpenARMap Android app is the foundation of our ecosystem. It allows anyone to capture georeferenced image sequences and sensor data that power downstream reconstruction, anchoring, and sharing. Whether you're contributing to public spatial datasets or exploring your environment in 3D, this tool is where it all begins.
 
 The sections below refer specifically to the mobile capture tool. If you're looking to test early scanning workflows or contribute to real-world spatial data collection, you're in the right place.
 
