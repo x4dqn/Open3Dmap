@@ -31,7 +31,7 @@ The full OpenARMap platform will eventually include:
 
 **2. Cloud Processing & Metadata**
 - A fast, mobile-optimized reconstruction pipeline using 3D Gaussian splatting, built for ease of use, contributor feedback, and civic-scale mapping
-- Auto-generated `.splatjson` metadata files
+- Auto-generated `.splatjson` metadata files (our open metadata format; in development)
 - Scan quality validation (coverage, density, drift)
 - Scene composability: support for merging overlapping scans into larger environments
 - Privacy filtering (PII blurring, licensing tags)
