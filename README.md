@@ -99,7 +99,10 @@ As part of this pipeline, each scan will be automatically paired with a structur
 
 We are also enhancing the mobile app to support more complete metadata capture, backend integration, and foundational features such as contributor identity, scan validation, and sync status tracking.
 
-These features are under active development and will be released incrementally through this repository.
+These features lay the groundwork for a seamless end-to-end contributor experience—from capture to upload to public sharing. While the full platform is still in development, the OpenARMap Android app already enables high-quality, offline-first spatial data collection.
+
+The section below describes what the app can do **today**, and how you can start capturing scans immediately.
+
 
 ## Mobile App for Data Capture
 
