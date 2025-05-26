@@ -4,13 +4,13 @@
 
 # OpenARMap
 
-**OpenARMap** is a community-driven initiative to build open, GPS-anchored 3D map infrastructure for spatial computing. Our goal is to enable anyone with a smartphone to capture, share, and reuse high-fidelity scans of the physical world—streets, parks, buildings, and public spaces—without relying on closed platforms or proprietary ecosystems.
+**OpenARMap** is a community-driven initiative to build an open, GPS-anchored 3D mapping infrastructure for spatial computing. Our mission is to let anyone with a smartphone capture, share, and reuse high-fidelity 3D scans (Gaussian Splats) of the physical world—streets, parks, buildings, public spaces—without relying on closed platforms or proprietary ecosystems.
 
 Every scan becomes part of a living digital twin: anchored with transparent metadata (.splatjson), freely exportable, and interoperable with tools like Unity, WebXR, and Cesium. From education and research to public art and civic planning, OpenARMap is designed to support open participation, long-term accessibility, and real-world utility.
 
 We believe spatial computing should be public infrastructure. OpenARMap is how we build it—together.
 
-This repository contains the **first component** of that system: an Android application for capturing high-quality spatial data. The app records image sequences, camera poses (via ARCore), GPS coordinates, and IMU sensor data. This forms the foundation for downstream processing into 3D reconstructions and Earth-anchored localization.
+This repository contains the **first component** of that system: an Android application that captures spatial data for 3D reconstruction. It records image sequences, ARCore camera poses, GPS coordinates, and IMU sensor data. These inputs are designed to feed into a downstream Gaussian splatting pipeline for fast, high-quality 3D reconstruction and global alignment.
 
 While the current focus is on mobile capture, this repository will eventually house the full OpenARMap codebase, including reconstruction tools, metadata generation, cloud pipelines, and web-based visualization. 
 
