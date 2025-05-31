@@ -145,6 +145,13 @@ The sections below refer specifically to the mobile capture tool. If you're look
 
 ## Installation
 
+### Option 1: Download APK (Recommended)
+1. Download the latest APK: [OpenARMap APK](APK%20Download.zip)
+2. Enable "Install from unknown sources" in your Android settings
+3. Install the downloaded APK
+4. Launch the app and grant necessary permissions
+
+### Option 2: Build from Source
 1. Clone the repository:
 ```bash
 git clone https://github.com/x4dqn/OpenARMap.git
