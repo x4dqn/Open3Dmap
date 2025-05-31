@@ -1,0 +1,66 @@
+{
+  "spec_version": "1.1",
+  "type": "SplatFeatureCollection",
+  "features": [
+    {
+      "type": "SplatFeature",
+      "id": "building-exterior-001",
+      "geometry": {
+        "type": "Splat3D",
+        "coordinates": [-77.6752, 43.0851, 165.2],
+        "orientation": [0.0, 0.0, 0.0, 1.0],
+        "scale": 1.0
+      },
+      "properties": {
+        "timestamp": "2025-05-31T16:00:00Z",
+        "splat_file_url": "https://openarmap.com/splats/building-exterior-001.splat",
+        "device_model": "iPhone 15 Pro",
+        "localization_method": "VIO+GPS",
+        "tags": ["building", "academic", "exterior"],
+        "privacy": {
+          "public": true,
+          "license": "CC-BY-SA-4.0"
+        },
+        "anchor": {
+          "type": "VIO+GPS",
+          "reference_coordinates": [-77.6752, 43.0851, 165.2],
+          "confidence": 0.88
+        },
+        "composability": {
+          "scene_id": "academic_buildings_cluster",
+          "version": 1
+        }
+      }
+    },
+    {
+      "type": "SplatFeature",
+      "id": "courtyard-001",
+      "geometry": {
+        "type": "Splat3D",
+        "coordinates": [-77.6749, 43.0849, 159.1],
+        "orientation": [0.0, 0.0, 0.0, 1.0],
+        "scale": 1.0
+      },
+      "properties": {
+        "timestamp": "2025-05-31T16:15:00Z",
+        "splat_file_url": "https://openarmap.com/splats/courtyard-001.splat",
+        "device_model": "Google Pixel 8",
+        "localization_method": "VIO+GPS",
+        "tags": ["courtyard", "outdoor", "seating"],
+        "privacy": {
+          "public": true,
+          "license": "CC-BY-SA-4.0"
+        },
+        "anchor": {
+          "type": "VIO+GPS",
+          "reference_coordinates": [-77.6749, 43.0849, 159.1],
+          "confidence": 0.92
+        },
+        "composability": {
+          "scene_id": "academic_buildings_cluster",
+          "version": 1
+        }
+      }
+    }
+  ]
+}
