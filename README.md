@@ -22,9 +22,7 @@ We're releasing this early-stage mobile app to kickstart development, invite col
 
 **Legend:**
 
-✅ = Available now
-🔄 = In active development
-(unmarked) = Planned for future
+✅ = Available now, 🔄 = In active development, (unmarked) = Planned for future
 
 ### Core Platform Components
 The full OpenARMap platform will eventually include:
