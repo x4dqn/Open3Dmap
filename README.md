@@ -6,15 +6,19 @@
 
 **OpenARMap** is a community-driven initiative to build an open, GPS-anchored 3D mapping infrastructure for spatial computing. Our mission is to let anyone with a smartphone capture, share, and reuse high-fidelity 3D scans (Gaussian Splats) of the physical world—streets, parks, buildings, public spaces—without relying on closed platforms or proprietary ecosystems.
 
-Every scan becomes part of a living digital twin: anchored with transparent metadata (.splatjson), freely exportable, and interoperable with tools like Unity, WebXR, and Cesium. From education and research to public art and civic planning, OpenARMap is designed to support open participation, long-term accessibility, and real-world utility.
+Every scan becomes part of a living digital twin: anchored with transparent metadata using our open [SplatJSON format](docs/splatjson-spec.md), freely exportable, and interoperable with tools like Unity, WebXR, and Cesium.** From education and research to public art and civic planning, OpenARMap is designed to support open participation, long-term accessibility, and real-world utility.
 
 We believe spatial computing should be public infrastructure. OpenARMap is how we build it—together.
 
-This repository contains the **first component** of that system: an Android application that captures spatial data for 3D reconstruction. It records image sequences, ARCore camera poses, GPS coordinates, and IMU sensor data. These inputs are designed to feed into a downstream Gaussian splatting pipeline for fast, high-quality 3D reconstruction and global alignment.
+## Project Status
 
-While the current focus is on mobile capture, this repository will eventually house the full OpenARMap codebase, including reconstruction tools, metadata generation, cloud pipelines, and web-based visualization. 
+This repository contains the **mobile capture application** and **open data standards** that form the foundation of the OpenARMap ecosystem. The Android app captures spatial data for 3D reconstruction, automatically generating metadata in our open [SplatJSON format](docs/splatjson-spec.md) for maximum interoperability. It records image sequences, ARCore camera poses, GPS coordinates, and IMU sensor data designed to feed into downstream Gaussian splatting pipelines for fast, high-quality 3D reconstruction and global alignment.
 
-We’re releasing this early-stage mobile app to kickstart development, invite collaborators, and begin testing participatory mobile scanning in real-world conditions.
+**📄 [SplatJSON Specification](docs/splatjson-spec.md) | 📁 [Example Files](examples/)**
+
+While the current focus is on mobile capture and open standards development, this repository will eventually house the full OpenARMap codebase, including reconstruction tools, cloud pipelines, and web-based visualization.
+
+We're releasing this early-stage mobile app to kickstart development, invite collaborators, and begin testing participatory mobile scanning in real-world conditions.
 
 ## Platform Roadmap
 
@@ -22,6 +26,7 @@ We’re releasing this early-stage mobile app to kickstart development, invite c
 The full OpenARMap platform will eventually include:
 
 **1. Mobile Capture App**
+-✅Open SplatJSON metadata export for every scan
 - Integrated Gaussian splat rendering and real-time feedback
 - Manual scan upload and contributor login flow
 - Incremental scan extension to grow existing scenes
@@ -31,8 +36,8 @@ The full OpenARMap platform will eventually include:
 
 **2. Cloud Processing & Metadata**
 - A fast, mobile-optimized reconstruction pipeline using 3D Gaussian splatting, built for ease of use, contributor feedback, and civic-scale mapping
-- Auto-generated `.splatjson` metadata files (our open metadata format; in development)
 - Scan quality validation (coverage, density, drift)
+- Automatic SplatJSON generation with GPS anchoring and composability metadata
 - Scene composability: support for merging overlapping scans into larger environments
 - Privacy filtering (PII blurring, licensing tags)
 - Incremental scan integration: enable contributors to extend, update, and refine existing scans collaboratively
@@ -47,7 +52,7 @@ The full OpenARMap platform will eventually include:
 **4. Open Standards and Developer Access**
 - Public API for scan retrieval, query, and integration
 - SDKs for Unity, WebXR, Cesium
-- `.splatjson`: standardized, georeferenced scan metadata
+- [SplatJSON specification](docs/splatjson-spec.md): standardized, georeferenced scan metadata
 - GeoPose and OGC-aligned anchoring support  for global interoperability
 
 ### Participatory Infrastructure Roadmap
@@ -83,7 +88,7 @@ The full OpenARMap platform will eventually include:
 - Open datasets for accessibility, robotics, and urban research
 -->
 
-At this stage, the repository includes only the Android app for data capture. Future components—including cloud processing, metadata generation, and web-based visualization—will be added incrementally as they are developed and tested.
+At this stage, the repository includes the Android app for data capture and the open SplatJSON specification with examples. Future components will be added incrementally as they are developed and tested.
 
 
 ## Coming Soon: Contributor Login and Cloud Pipeline
@@ -116,6 +121,7 @@ The sections below refer specifically to the mobile capture tool. If you're look
 - Automatic frame capture with quality assessment
 - GPS location tracking for outdoor scans
 - IMU data capture (accelerometer and gyroscope)
+- Export functionality with SplatJSON metadata format
 - Export functionality with INRIA-compatible format
 - Scan management (rename, delete, export)
 - Quality metrics for optimal capture
@@ -132,7 +138,7 @@ The sections below refer specifically to the mobile capture tool. If you're look
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/yourusername/OpenARMap.git
+git clone https://github.com/x4dqn/OpenARMap.git
 cd OpenARMap
 ```
 
@@ -183,7 +189,7 @@ OpenARMaps/Exports/
     └── metadata/
         ├── transforms.json
         └── session_[ID].json
-        └── scan_id.splatjson   <-- (coming soon)
+        └── scan_id.splatjson
 ```
 
 ## Using with INRIA Gaussian Splatting
