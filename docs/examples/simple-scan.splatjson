@@ -1,0 +1,56 @@
+{
+  "spec_version": "1.1",
+  "type": "SplatFeature",
+  "id": "rit-library-entrance-001",
+  "geometry": {
+    "type": "Splat3D",
+    "coordinates": [-77.6751, 43.0848, 162.3],
+    "orientation": [0.0, 0.0, 0.0, 1.0],
+    "scale": 1.0
+  },
+  "properties": {
+    "timestamp": "2025-05-31T15:30:00Z",
+    "splat_file_url": "https://openarmap.com/splats/rit-library-entrance-001.splat",
+    "raw_file_url": "https://openarmap.com/raw/rit-library-entrance-001.zip",
+    "preview_image": "https://openarmap.com/previews/rit-library-entrance-001.jpg",
+    "device_model": "iPhone 15 Pro",
+    "localization_method": "VIO+GPS",
+    "tags": ["campus", "library", "entrance", "accessibility"],
+    "privacy": {
+      "public": true,
+      "license": "CC-BY-SA-4.0"
+    },
+    "anchor": {
+      "type": "VIO+GPS",
+      "reference_coordinates": [-77.6751, 43.0848, 162.3],
+      "reference_orientation": [0.0, 0.0, 0.0, 1.0],
+      "confidence": 0.89,
+      "anchor_id": "rit-library-main",
+      "local_to_global_matrix": [
+        [1.000, 0.002, 0.001, -0.12],
+        [-0.002, 0.999, 0.003, 0.08],
+        [-0.001, -0.003, 1.000, 0.15],
+        [0.0, 0.0, 0.0, 1.0]
+      ],
+      "anchor_fallback": {
+        "method": "marker_image",
+        "marker_image_url": "https://openarmap.com/markers/rit-library-entrance-001.jpg"
+      },
+      "observed_at": [
+        {
+          "timestamp": "2025-05-31T15:30:00Z",
+          "device_model": "iPhone 15 Pro"
+        }
+      ]
+    }
+  },
+  "extensions": {
+    "semantic_labels": ["building", "entrance", "stairs"],
+    "extra_properties": {
+      "submitter": "student@rit.edu",
+      "environment": "outdoor",
+      "lighting_conditions": "partly_cloudy",
+      "purpose": "accessibility_mapping"
+    }
+  }
+}
