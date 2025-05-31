@@ -1,0 +1,65 @@
+{
+  "spec_version": "1.1",
+  "type": "SplatFeature",
+  "id": "campus-quad-ext-002",
+  "geometry": {
+    "type": "Splat3D",
+    "coordinates": [-77.6748, 43.0858, 158.9],
+    "orientation": [0.0, 0.087, 0.0, 0.996],
+    "scale": 1.0
+  },
+  "properties": {
+    "timestamp": "2025-05-31T14:15:00Z",
+    "splat_file_url": "https://openarmap.com/splats/campus-quad-ext-002.splat",
+    "raw_file_url": "https://openarmap.com/raw/campus-quad-ext-002.zip",
+    "preview_image": "https://openarmap.com/previews/campus-quad-ext-002.jpg",
+    "device_model": "Samsung Galaxy S24",
+    "localization_method": "VIO+GPS",
+    "tags": ["campus", "quad", "extension", "seating"],
+    "privacy": {
+      "public": true,
+      "license": "CC-BY-SA-4.0"
+    },
+    "anchor": {
+      "type": "VIO+GPS",
+      "reference_coordinates": [-77.6748, 43.0858, 158.9],
+      "reference_orientation": [0.0, 0.087, 0.0, 0.996],
+      "confidence": 0.87,
+      "anchor_id": "rit-campus-quad-north",
+      "alignment_transform": [
+        [0.996, 0.0, 0.087, 0.05],
+        [0.0, 1.0, 0.0, 0.02],
+        [-0.087, 0.0, 0.996, -0.03],
+        [0.0, 0.0, 0.0, 1.0]
+      ],
+      "local_to_global_matrix": [
+        [0.992, 0.003, 0.125, -1.18],
+        [0.001, 0.999, -0.002, 0.53],
+        [-0.125, 0.001, 0.992, 2.09],
+        [0.0, 0.0, 0.0, 1.0]
+      ],
+      "observed_at": [
+        {
+          "timestamp": "2025-05-31T14:15:00Z",
+          "device_model": "Samsung Galaxy S24"
+        }
+      ]
+    },
+    "composability": {
+      "extends": ["campus-quad-base-001"],
+      "scene_id": "rit_campus_quad",
+      "version": 2,
+      "merge_group_id": "quad_mapping_session_1",
+      "is_primary_alignment": false
+    }
+  },
+  "extensions": {
+    "semantic_labels": ["bench", "sculpture", "paved_area"],
+    "extra_properties": {
+      "submitter": "student@rit.edu",
+      "environment": "outdoor",
+      "lighting_conditions": "sunny",
+      "scan_coverage": "north_seating_area"
+    }
+  }
+}
