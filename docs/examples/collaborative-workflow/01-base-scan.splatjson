@@ -1,0 +1,58 @@
+{
+  "spec_version": "1.1",
+  "type": "SplatFeature",
+  "id": "campus-quad-base-001",
+  "geometry": {
+    "type": "Splat3D",
+    "coordinates": [-77.6745, 43.0855, 158.7],
+    "orientation": [0.0, 0.0, 0.0, 1.0],
+    "scale": 1.0
+  },
+  "properties": {
+    "timestamp": "2025-05-31T14:00:00Z",
+    "splat_file_url": "https://openarmap.com/splats/campus-quad-base-001.splat",
+    "raw_file_url": "https://openarmap.com/raw/campus-quad-base-001.zip",
+    "preview_image": "https://openarmap.com/previews/campus-quad-base-001.jpg",
+    "device_model": "Google Pixel 8",
+    "localization_method": "VIO+GPS",
+    "tags": ["campus", "quad", "baseline", "public-space"],
+    "privacy": {
+      "public": true,
+      "license": "CC-BY-SA-4.0"
+    },
+    "anchor": {
+      "type": "VIO+GPS",
+      "reference_coordinates": [-77.6745, 43.0855, 158.7],
+      "reference_orientation": [0.0, 0.0, 0.0, 1.0],
+      "confidence": 0.94,
+      "anchor_id": "rit-campus-quad-center",
+      "local_to_global_matrix": [
+        [0.998, 0.001, 0.062, -1.24],
+        [0.002, 1.000, -0.004, 0.51],
+        [-0.062, 0.004, 0.998, 2.17],
+        [0.0, 0.0, 0.0, 1.0]
+      ],
+      "observed_at": [
+        {
+          "timestamp": "2025-05-31T14:00:00Z",
+          "device_model": "Google Pixel 8"
+        }
+      ]
+    },
+    "composability": {
+      "scene_id": "rit_campus_quad",
+      "version": 1,
+      "merge_group_id": "quad_mapping_session_1",
+      "is_primary_alignment": true
+    }
+  },
+  "extensions": {
+    "semantic_labels": ["grass", "walkway", "trees"],
+    "extra_properties": {
+      "submitter": "researcher@rit.edu",
+      "environment": "outdoor",
+      "lighting_conditions": "sunny",
+      "scan_coverage": "central_area"
+    }
+  }
+}
