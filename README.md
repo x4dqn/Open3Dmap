@@ -14,19 +14,26 @@ We believe spatial computing should be public infrastructure. OpenARMap is how w
 
 This repository contains the **mobile capture application** and **open data standards** that form the foundation of the OpenARMap ecosystem. The Android app captures spatial data for 3D reconstruction, automatically generating metadata in our open [SplatJSON format](docs/splatjson-spec.md) for maximum interoperability. It records image sequences, ARCore camera poses, GPS coordinates, and IMU sensor data designed to feed into downstream Gaussian splatting pipelines for fast, high-quality 3D reconstruction and global alignment.
 
-**📄 [SplatJSON Specification](docs/splatjson-spec.md) | 📁 [Example Files](examples/)**
-
 While the current focus is on mobile capture and open standards development, this repository will eventually house the full OpenARMap codebase, including reconstruction tools, cloud pipelines, and web-based visualization.
 
 We're releasing this early-stage mobile app to kickstart development, invite collaborators, and begin testing participatory mobile scanning in real-world conditions.
 
 ## Platform Roadmap
 
+**Legend:**
+
+✅ = Available now
+🔄 = In active development
+(unmarked) = Planned for future
+
 ### Core Platform Components
 The full OpenARMap platform will eventually include:
 
 **1. Mobile Capture App**
--✅Open SplatJSON metadata export for every scan
+- ✅ Real-time camera tracking using ARCore
+- ✅ GPS location tracking for outdoor scans  
+- ✅ Offline-first capture with INRIA export
+- 🔄 Open SplatJSON metadata export for every scan (in development)
 - Integrated Gaussian splat rendering and real-time feedback
 - Manual scan upload and contributor login flow
 - Incremental scan extension to grow existing scenes
@@ -35,6 +42,8 @@ The full OpenARMap platform will eventually include:
 - iOS version and cross-device consistency tooling
 
 **2. Cloud Processing & Metadata**
+- 🔄 User authentication and login system (in development)
+- 🔄 Web-based scan upload and management (in development)
 - A fast, mobile-optimized reconstruction pipeline using 3D Gaussian splatting, built for ease of use, contributor feedback, and civic-scale mapping
 - Scan quality validation (coverage, density, drift)
 - Automatic SplatJSON generation with GPS anchoring and composability metadata
@@ -43,8 +52,10 @@ The full OpenARMap platform will eventually include:
 - Incremental scan integration: enable contributors to extend, update, and refine existing scans collaboratively
 
 **3. Web Portal and Dashboard**
+- 🔄 Basic scan viewer and  management interface (in development)
+- 🔄 Contributor dashboards (in development)
 - Map-based scan viewer and explorer
-- Contributor dashboards and scan management
+- Advanced contributor dashboards and scan management
 - Export options: .splat, .splatjson, .glb, .ply, .usdz, .obj
 - Contributor-defined license controls (e.g., CC-BY, CC0)
 - Spatial querying, filtering, and version history
@@ -52,7 +63,7 @@ The full OpenARMap platform will eventually include:
 **4. Open Standards and Developer Access**
 - Public API for scan retrieval, query, and integration
 - SDKs for Unity, WebXR, Cesium
-- [SplatJSON specification](docs/splatjson-spec.md): standardized, georeferenced scan metadata
+- ✅ [SplatJSON specification](docs/splatjson-spec.md): standardized, georeferenced scan metadata
 - GeoPose and OGC-aligned anchoring support  for global interoperability
 
 ### Participatory Infrastructure Roadmap
