@@ -63,7 +63,7 @@ These files can be used to:
 
 ## Validation
 
-All example files conform to the SplatJSON v1.1 specification documented in [`../docs/splatjson-spec.md`]([../docs/splatjson-spec.md](https://github.com/x4dqn/OpenARMap/blob/main/docs/splatjson-spec.md).
+All example files conform to the SplatJSON v1.1 specification documented in [`../docs/splatjson-spec.md`](https://github.com/x4dqn/OpenARMap/blob/main/docs/splatjson-spec.md)
 
 ## Contributing
 
