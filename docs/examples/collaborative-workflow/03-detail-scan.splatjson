@@ -1,0 +1,66 @@
+{
+  "spec_version": "1.1",
+  "type": "SplatFeature",
+  "id": "campus-quad-detail-003",
+  "geometry": {
+    "type": "Splat3D",
+    "coordinates": [-77.6746, 43.0856, 158.8],
+    "orientation": [0.0, 0.174, 0.0, 0.985],
+    "scale": 1.0
+  },
+  "properties": {
+    "timestamp": "2025-05-31T14:30:00Z",
+    "splat_file_url": "https://openarmap.com/splats/campus-quad-detail-003.splat",
+    "raw_file_url": "https://openarmap.com/raw/campus-quad-detail-003.zip",
+    "preview_image": "https://openarmap.com/previews/campus-quad-detail-003.jpg",
+    "device_model": "iPhone 15 Pro",
+    "localization_method": "VIO+GPS",
+    "tags": ["campus", "quad", "high-detail", "artwork", "memorial"],
+    "privacy": {
+      "public": true,
+      "license": "CC-BY-SA-4.0"
+    },
+    "anchor": {
+      "type": "VIO+GPS",
+      "reference_coordinates": [-77.6746, 43.0856, 158.8],
+      "reference_orientation": [0.0, 0.174, 0.0, 0.985],
+      "confidence": 0.91,
+      "anchor_id": "rit-campus-quad-memorial",
+      "alignment_transform": [
+        [0.970, 0.0, 0.242, 0.08],
+        [0.0, 1.0, 0.0, 0.01],
+        [-0.242, 0.0, 0.970, -0.05],
+        [0.0, 0.0, 0.0, 1.0]
+      ],
+      "local_to_global_matrix": [
+        [0.965, 0.004, 0.263, -1.16],
+        [0.002, 0.999, -0.003, 0.52],
+        [-0.263, 0.002, 0.965, 2.12],
+        [0.0, 0.0, 0.0, 1.0]
+      ],
+      "observed_at": [
+        {
+          "timestamp": "2025-05-31T14:30:00Z",
+          "device_model": "iPhone 15 Pro"
+        }
+      ]
+    },
+    "composability": {
+      "extends": ["campus-quad-base-001", "campus-quad-ext-002"],
+      "scene_id": "rit_campus_quad",
+      "version": 3,
+      "merge_group_id": "quad_mapping_session_1",
+      "is_primary_alignment": false
+    }
+  },
+  "extensions": {
+    "semantic_labels": ["memorial_plaque", "bronze_sculpture", "inscription"],
+    "extra_properties": {
+      "submitter": "faculty@rit.edu",
+      "environment": "outdoor",
+      "lighting_conditions": "partly_cloudy",
+      "scan_coverage": "memorial_detail",
+      "cultural_significance": "campus_history"
+    }
+  }
+}
