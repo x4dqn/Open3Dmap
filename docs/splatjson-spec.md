@@ -1,5 +1,4 @@
 # SplatJSON Specification v1.1
-**OpenARMap**
 
 ## Overview
 SplatJSON is a lightweight, extensible open format for describing 3D Gaussian splat scans anchored in physical space. Inspired by GeoJSON, SplatJSON provides a standard way to represent spatial metadata about a 3D scan, enabling interoperability across tools, platforms, and applications. It is designed to support a range of use cases including visualization, archiving, civic engagement, AR prototyping, and integration into spatial computing workflows.
