@@ -1,7 +1,9 @@
 <p align="center">
   <img src="assets/open3dmap.png" alt="Open3DMap Logo" width="300"/>
 </p>
-
+<p align="center">
+Open3DMap - Mapping the World, Together
+</p>
 # Open3DMap
 
 **Open3DMap** is a community-driven initiative to build an open, GPS-anchored 3D mapping infrastructure for spatial computing. Our mission is to let anyone with a smartphone capture, share, and reuse high-fidelity 3D scans (Gaussian Splats) of the physical world—streets, parks, buildings, public spaces—without relying on closed platforms or proprietary ecosystems.
