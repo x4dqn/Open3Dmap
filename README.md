@@ -6,7 +6,7 @@
 
 **OpenARMap** is a community-driven initiative to build an open, GPS-anchored 3D mapping infrastructure for spatial computing. Our mission is to let anyone with a smartphone capture, share, and reuse high-fidelity 3D scans (Gaussian Splats) of the physical world—streets, parks, buildings, public spaces—without relying on closed platforms or proprietary ecosystems.
 
-Every scan becomes part of a living digital twin: anchored with transparent metadata using our open [SplatJSON format](docs/splatjson-spec.md), freely exportable, and interoperable with tools like Unity, WebXR, and Cesium.** From education and research to public art and civic planning, OpenARMap is designed to support open participation, long-term accessibility, and real-world utility.
+Every scan becomes part of a living digital twin: anchored with transparent metadata using our open [SplatJSON format](docs/splatjson-spec.md), freely exportable, and interoperable with tools like Unity, WebXR, and Cesium. From education and research to public art and civic planning, OpenARMap is designed to support open participation, long-term accessibility, and real-world utility.
 
 We believe spatial computing should be public infrastructure. OpenARMap is how we build it—together.
 
