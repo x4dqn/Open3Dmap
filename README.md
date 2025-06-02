@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="assets/Open3DMap_Logo.png" alt="Open3DMap Logo" width="300"/>
+  <img src="assets/open3dmap.png" alt="Open3DMap Logo" width="300"/>
 </p>
 
 # Open3DMap
