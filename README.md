@@ -1,20 +1,20 @@
 <p align="center">
-  <img src="assets/OpenARMap_Logo.png" alt="OpenARMap Logo" width="300"/>
+  <img src="assets/Open3DMap_Logo.png" alt="Open3DMap Logo" width="300"/>
 </p>
 
-# OpenARMap
+# Open3DMap
 
-**OpenARMap** is a community-driven initiative to build an open, GPS-anchored 3D mapping infrastructure for spatial computing. Our mission is to let anyone with a smartphone capture, share, and reuse high-fidelity 3D scans (Gaussian Splats) of the physical world—streets, parks, buildings, public spaces—without relying on closed platforms or proprietary ecosystems.
+**Open3DMap** is a community-driven initiative to build an open, GPS-anchored 3D mapping infrastructure for spatial computing. Our mission is to let anyone with a smartphone capture, share, and reuse high-fidelity 3D scans (Gaussian Splats) of the physical world—streets, parks, buildings, public spaces—without relying on closed platforms or proprietary ecosystems.
 
-Every scan becomes part of a living digital twin: anchored with transparent metadata using our open [SplatJSON format](docs/splatjson-spec.md), freely exportable, and interoperable with tools like Unity, WebXR, and Cesium. From education and research to public art and civic planning, OpenARMap is designed to support open participation, long-term accessibility, and real-world utility.
+Every scan becomes part of a living digital twin: anchored with transparent metadata using our open [SplatJSON format](docs/splatjson-spec.md), freely exportable, and interoperable with tools like Unity, WebXR, and Cesium. From education and research to public art and civic planning, Open3DMap is designed to support open participation, long-term accessibility, and real-world utility.
 
-We believe spatial computing should be public infrastructure. OpenARMap is how we build it—together.
+We believe spatial computing should be public infrastructure. Open3DMap is how we build it—together.
 
 ## Project Status
 
-This repository contains the **mobile capture application** and **open data standards** that form the foundation of the OpenARMap ecosystem. The Android app captures spatial data for 3D reconstruction, automatically generating metadata in our open [SplatJSON format](docs/splatjson-spec.md) for maximum interoperability. It records image sequences, ARCore camera poses, GPS coordinates, and IMU sensor data designed to feed into downstream Gaussian splatting pipelines for fast, high-quality 3D reconstruction and global alignment.
+This repository contains the **mobile capture application** and **open data standards** that form the foundation of the Open3DMap ecosystem. The Android app captures spatial data for 3D reconstruction, automatically generating metadata in our open [SplatJSON format](docs/splatjson-spec.md) for maximum interoperability. It records image sequences, ARCore camera poses, GPS coordinates, and IMU sensor data designed to feed into downstream Gaussian splatting pipelines for fast, high-quality 3D reconstruction and global alignment.
 
-While the current focus is on mobile capture and open standards development, this repository will eventually house the full OpenARMap codebase, including reconstruction tools, cloud pipelines, and web-based visualization.
+While the current focus is on mobile capture and open standards development, this repository will eventually house the full Open3DMap codebase, including reconstruction tools, cloud pipelines, and web-based visualization.
 
 We're releasing this early-stage mobile app to kickstart development, invite collaborators, and begin testing participatory mobile scanning in real-world conditions.
 
@@ -25,7 +25,7 @@ We're releasing this early-stage mobile app to kickstart development, invite col
 ✅ = Available now, 🔄 = In active development, (unmarked) = Planned for future
 
 ### Core Platform Components
-The full OpenARMap platform will eventually include:
+The full Open3DMap platform will eventually include:
 
 **1. Mobile Capture App**
 - ✅ Real-time camera tracking using ARCore
@@ -105,7 +105,7 @@ At this stage, the repository includes the Android app for data capture and the 
 We are actively building out user authentication and cloud integration to support a seamless contributor workflow. This will enable users to:
 
 - Log in via email-based authentication (mobile-first)
-- Capture scans using the OpenARMap Android app
+- Capture scans using the Open3DMap Android app
 - Upload scans directly to the cloud
 - View and manage their uploaded scans on the web, including metadata, filtering, and map-based visualization
 
@@ -113,14 +113,14 @@ As part of this pipeline, each scan will be automatically paired with a structur
 
 We are also enhancing the mobile app to support more complete metadata capture, backend integration, and foundational features such as contributor identity, scan validation, and sync status tracking.
 
-These features lay the groundwork for a seamless end-to-end contributor experience—from capture to upload to public sharing. While the full platform is still in development, the OpenARMap Android app already enables high-quality, offline-first spatial data collection.
+These features lay the groundwork for a seamless end-to-end contributor experience—from capture to upload to public sharing. While the full platform is still in development, the Open3DMap Android app already enables high-quality, offline-first spatial data collection.
 
 The section below describes what the app can do **today**, and how you can start capturing scans immediately.
 
 
 ## Mobile App for Data Capture
 
-The OpenARMap Android app is the foundation of our ecosystem. It allows anyone to capture georeferenced image sequences and sensor data that power downstream reconstruction, anchoring, and sharing. Whether you're contributing to public spatial datasets or exploring your environment in 3D, this tool is where it all begins.
+The Open3DMap Android app is the foundation of our ecosystem. It allows anyone to capture georeferenced image sequences and sensor data that power downstream reconstruction, anchoring, and sharing. Whether you're contributing to public spatial datasets or exploring your environment in 3D, this tool is where it all begins.
 
 The sections below refer specifically to the mobile capture tool. If you're looking to test early scanning workflows or contribute to real-world spatial data collection, you're in the right place.
 
@@ -146,7 +146,7 @@ The sections below refer specifically to the mobile capture tool. If you're look
 ## Installation
 
 ### Option 1: Download APK (Recommended)
-1. Download the latest APK: [OpenARMap APK](APK%20Download.zip)
+1. Download the latest APK: [Open3DMap APK](APK%20Download.zip)
 2. Enable "Install from unknown sources" in your Android settings
 3. Install the downloaded APK
 4. Launch the app and grant necessary permissions
@@ -154,8 +154,8 @@ The sections below refer specifically to the mobile capture tool. If you're look
 ### Option 2: Build from Source
 1. Clone the repository:
 ```bash
-git clone https://github.com/x4dqn/OpenARMap.git
-cd OpenARMap
+git clone https://github.com/x4dqn/Open3DMap.git
+cd Open3DMap
 ```
 
 2. Open the project in Android Studio:
@@ -196,7 +196,7 @@ cd OpenARMap
 The app exports data in a format compatible with the INRIA Gaussian Splatting pipeline:
 
 ```
-OpenARMaps/Exports/
+Open3DMaps/Exports/
 └── ScanName_YYYY-MM-DD_HH-mm/
     ├── images/
     │   ├── frame_000.jpg
