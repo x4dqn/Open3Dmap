@@ -36,9 +36,9 @@ Describes a single 3D splat and its associated metadata.
   },
   "properties": {
     "timestamp": "2025-05-25T14:03:00Z",
-    "splat_file_url": "https://openarmap.com/splats/abc123.splat",
-    "raw_file_url": "https://openarmap.com/raw/abc123.zip",
-    "preview_image": "https://openarmap.com/previews/abc123.jpg",
+    "splat_file_url": "https://open3dmap.com/splats/abc123.splat",
+    "raw_file_url": "https://open3dmap.com/raw/abc123.zip",
+    "preview_image": "https://open3dmap.com/previews/abc123.jpg",
     "device_model": "iPhone 14 Pro",
     "localization_method": "VIO+GPS",
     "tags": ["public-art", "city-center"],
@@ -66,7 +66,7 @@ Describes a single 3D splat and its associated metadata.
       ],
       "anchor_fallback": {
         "method": "marker_image",
-        "marker_image_url": "https://openarmap.com/markers/abc123.jpg"
+        "marker_image_url": "https://open3dmap.com/markers/abc123.jpg"
       },
       "observed_at": [
         {
@@ -241,6 +241,6 @@ This workflow demonstrates how contributors can build upon each other's work: th
 - Asset bundling + scripting support (trigger interactions, attach behaviors)
 
 ## License
-SplatJSON is an open format maintained under the MIT License. Contributions, feedback, and pull requests are welcome at openarmap.org or via GitHub.
+SplatJSON is an open format maintained under the MIT License. Contributions, feedback, and pull requests are welcome at open3dmap.org or via GitHub.
 
-**Maintained by OpenARMap.org**
+**Maintained by open3dmap.org**
