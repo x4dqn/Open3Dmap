@@ -1,6 +1,6 @@
 # SplatJSON Examples
 
-This directory contains example SplatJSON files demonstrating various use cases and features of the OpenARMap spatial data format.
+This directory contains example SplatJSON files demonstrating various use cases and features of the open3dmap spatial data format.
 
 ## Overview
 
@@ -63,7 +63,7 @@ These files can be used to:
 
 ## Validation
 
-All example files conform to the SplatJSON v1.1 specification documented in [`../docs/splatjson-spec.md`](https://github.com/x4dqn/OpenARMap/blob/main/docs/splatjson-spec.md)
+All example files conform to the SplatJSON v1.1 specification documented in [`../docs/splatjson-spec.md`](https://github.com/x4dqn/open3dmap/blob/main/docs/splatjson-spec.md)
 
 ## Contributing
 
