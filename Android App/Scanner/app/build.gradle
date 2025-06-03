@@ -5,6 +5,29 @@ plugins {
     id 'com.google.gms.google-services'
 }
 
+// Function to read API keys securely
+def getApiKey(String propertyName) {
+    // First try to get from environment variable
+    def envValue = System.getenv(propertyName)
+    if (envValue != null) {
+        return envValue
+    }
+    
+    // Then try to get from local.properties
+    def localPropertiesFile = rootProject.file("local.properties")
+    if (localPropertiesFile.exists()) {
+        def localProperties = new Properties()
+        localProperties.load(new FileInputStream(localPropertiesFile))
+        def localValue = localProperties.getProperty(propertyName)
+        if (localValue != null) {
+            return localValue
+        }
+    }
+    
+    // Return placeholder if not found
+    return "YOUR_GOOGLE_AR_API_KEY_HERE"
+}
+
 android {
     namespace 'com.openarmap.openarscanner'
     compileSdk 34
@@ -17,6 +40,14 @@ android {
         versionName "1.0"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        
+        // Add API key to BuildConfig for secure access
+        buildConfigField "String", "GOOGLE_AR_API_KEY", "\"${getApiKey('GOOGLE_AR_API_KEY')}\""
+        
+        // Add to manifest placeholders for AndroidManifest.xml
+        manifestPlaceholders = [
+            googleArApiKey: getApiKey('GOOGLE_AR_API_KEY')
+        ]
     }
 
     buildTypes {
@@ -37,6 +68,7 @@ android {
 
     buildFeatures {
         viewBinding true
+        buildConfig true
     }
 }
 

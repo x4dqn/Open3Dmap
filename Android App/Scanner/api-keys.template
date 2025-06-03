@@ -1,0 +1,19 @@
+# API Keys Configuration Template
+# Copy this file to local.properties and fill in your actual API keys
+
+# IMPORTANT: local.properties is in .gitignore and will NOT be committed to version control
+
+# Google AR API Key (from Google Cloud Console)
+GOOGLE_AR_API_KEY=your_actual_google_ar_api_key_here
+
+# Other API keys can be added here as needed
+# FIREBASE_API_KEY=your_firebase_key_here
+# OTHER_SERVICE_KEY=your_other_key_here
+
+## How to use:
+## 1. Go to Google Cloud Console (https://console.cloud.google.com/)
+## 2. Create/select your project
+## 3. Go to APIs & Services > Credentials
+## 4. Create API Key and restrict to ARCore API
+## 5. Copy the key and replace "your_actual_google_ar_api_key_here" above
+## 6. Add the line to your local.properties file 

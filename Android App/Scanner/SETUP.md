@@ -22,7 +22,7 @@ This project requires several API keys and configuration files that are **not in
    - **Storage**: Enable Firebase Storage
    - **App Check**: Configure with Play Integrity API
 
-### 2. **Google AR API Key**
+### 2. **Google AR API Key (SECURE METHOD)**
 
 1. **Get ARCore API Key**:
    - Go to [Google Cloud Console](https://console.cloud.google.com/)
@@ -30,11 +30,28 @@ This project requires several API keys and configuration files that are **not in
    - Create credentials → API Key
    - Restrict the key to ARCore API
 
-2. **Add API Key**:
-   - Open `Android App/Scanner/app/src/main/AndroidManifest.xml`
-   - Replace `YOUR_GOOGLE_AR_API_KEY_HERE` with your actual API key
+2. **Add API Key Securely**:
+   - Open `Android App/Scanner/local.properties`
+   - Add this line: `GOOGLE_AR_API_KEY=your_actual_api_key_here`
+   - Replace `your_actual_api_key_here` with your real API key
+   - **NEVER commit local.properties to git** (it's already in .gitignore)
 
-### 3. **Google Sign-In Configuration**
+   **Example local.properties:**
+   ```properties
+   sdk.dir=C:\\Users\\YourName\\AppData\\Local\\Android\\Sdk
+   GOOGLE_AR_API_KEY=AIzaSyD1234567890abcdefghijklmnopqrstuvwx
+   ```
+
+### 3. **Alternative: Environment Variables**
+
+For CI/CD or server builds, you can also use environment variables:
+```bash
+export GOOGLE_AR_API_KEY=your_actual_api_key_here
+```
+
+The build system will automatically use environment variables if available, or fall back to local.properties.
+
+### 4. **Google Sign-In Configuration**
 
 1. **Get SHA1 Fingerprint**:
    ```bash
@@ -64,7 +81,7 @@ This project requires several API keys and configuration files that are **not in
    cd OpenARMap
    ```
 
-2. **Configure API Keys** (see above sections)
+2. **Configure API Keys** (see secure method above)
 
 3. **Open in Android Studio**:
    - Open `Android App/Scanner` folder
@@ -83,12 +100,28 @@ The app requires these Android permissions:
 - **Location** (for GPS tagging)
 - **Storage** (for saving scans)
 
+## Security Features
+
+### API Key Security
+- ✅ API keys are **never** stored in source code
+- ✅ API keys are read from `local.properties` (not in git)
+- ✅ Environment variable support for CI/CD
+- ✅ BuildConfig integration for secure access
+- ✅ Manifest placeholder replacement
+
+### Files Never Committed:
+- `local.properties` (contains API keys)
+- `google-services.json` (Firebase config)
+- `*.key` files
+- `secrets.properties`
+
 ## Security Notes
 
 - **NEVER** commit `google-services.json` to version control
 - **NEVER** commit API keys in plain text
 - Use environment variables or secure key management in production
 - Rotate API keys regularly
+- Always use `local.properties` for development API keys
 
 ## Dependencies
 
@@ -108,12 +141,18 @@ All dependencies are managed via Gradle and will be downloaded automatically:
    - Verify SHA1 fingerprint in Firebase Console
 
 2. **ARCore crashes**:
-   - Verify AR API key is correct
+   - Verify AR API key is correct in `local.properties`
    - Check device supports ARCore
 
 3. **Build errors**:
    - Ensure Java 17 is installed
    - Clear Gradle cache: `./gradlew clean`
+   - Check API key is set in `local.properties`
+
+4. **API key not found**:
+   - Ensure `GOOGLE_AR_API_KEY=your_key` is in `local.properties`
+   - No spaces around the `=` sign
+   - Check the file is in the correct location
 
 ## Support
 
