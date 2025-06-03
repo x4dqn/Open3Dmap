@@ -2,4 +2,19 @@
 .env
 .env.*
 
+# Google Services (Firebase)
+google-services.json
+app/google-services.json
+
+# API Keys and secrets
+*.key
+secrets.properties
+
+# Local configuration files
+local.properties
+
+# Android keystore files
+*.jks
+*.keystore
+
 # ... existing code ... 

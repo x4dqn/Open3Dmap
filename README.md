@@ -6,6 +6,10 @@ Open3DMap - Mapping the World, Together
 </p>
 # Open3DMap
 
+[![Open3D Scanner](https://img.shields.io/badge/Platform-Android-green.svg)](https://developer.android.com)
+[![Firebase](https://img.shields.io/badge/Backend-Firebase-orange.svg)](https://firebase.google.com)
+[![ARCore](https://img.shields.io/badge/AR-ARCore-blue.svg)](https://developers.google.com/ar)
+
 **Open3DMap** is a community-driven initiative to build an open, GPS-anchored 3D mapping infrastructure for spatial computing. Our mission is to let anyone with a smartphone capture, share, and reuse high-fidelity 3D scans (Gaussian Splats) of the physical world—streets, parks, buildings, public spaces—without relying on closed platforms or proprietary ecosystems.
 
 Every scan becomes part of a living digital twin: anchored with transparent metadata using our open [SplatJSON format](docs/splatjson-spec.md), freely exportable, and interoperable with tools like Unity, WebXR, and Cesium. From education and research to public art and civic planning, Open3DMap is designed to support open participation, long-term accessibility, and real-world utility.
@@ -83,7 +87,7 @@ The full Open3DMap platform will eventually include:
 **7. Discovery and Social Layer**
 - Public feed and scan activity heatmaps
 - Followable mappers and region-based community hubs
-- AR “Moments” from OpenStreetMap-style interface
+- AR "Moments" from OpenStreetMap-style interface
 - Collaborative collections and spatial storytelling layers
 
 **8. Temporal Maintenance**
@@ -276,3 +280,90 @@ This project is licensed under CC BY-NC 4.0 - see the LICENSE file for details.
 - ARCore team for the excellent tracking capabilities
 - INRIA team for their work on [3D Gaussian Splatting](https://repo-sam.inria.fr/fungraph/3d-gaussian-splatting/)
 - All contributors and users of the project
+
+## **IMPORTANT: Setup Required**
+
+This repository **does NOT include API keys or Firebase configuration** for security reasons.
+
+**Before building, you MUST:**
+1. **Read** `Android App/Scanner/SETUP.md` for complete setup instructions
+2. **Configure** your own Firebase project
+3. **Add** your API keys to the project
+
+**Required Files (not in repo):**
+- `app/google-services.json` (Firebase configuration)
+- API keys in `AndroidManifest.xml`
+
+## Quick Start
+
+```bash
+# 1. Clone the repository
+git clone <repository-url>
+cd OpenARMap
+
+# 2. Follow setup instructions
+# See: Android App/Scanner/SETUP.md
+
+# 3. Build the project
+cd "Android App/Scanner"
+./gradlew assembleDebug
+```
+
+## Screenshots
+
+[Add screenshots of your app here]
+
+## Architecture
+
+```
+Open3DMap Scanner/
+├── UI Layer (Activities, Fragments)
+├── ViewModel Layer (State Management)
+├── Repository Layer (Data Access)
+├── Firebase Services (Auth, Storage, Firestore)
+└── ARCore Integration (3D Scanning)
+```
+
+## Security & Privacy
+
+- **Secure Authentication**: Firebase Auth with Google Sign-In
+- **App Check**: Protection against abuse with Play Integrity
+- **Encrypted Storage**: All data secured in Firebase
+- **API Key Security**: Keys excluded from version control
+
+## Contributing
+
+1. **Fork** the repository
+2. **Follow** setup instructions in `SETUP.md`
+3. **Create** a feature branch
+4. **Test** your changes thoroughly
+5. **Submit** a pull request
+
+### Development Guidelines
+
+- Use **Kotlin** for all new code
+- Follow **Material Design 3** principles
+- Add **unit tests** for new features
+- Update **documentation** for API changes
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## Support
+
+- **Setup Issues**: Check `Android App/Scanner/SETUP.md`
+- **Bug Reports**: Create an issue with detailed steps to reproduce
+- **Feature Requests**: Open an issue with your proposal
+- **Contact**: [Your contact information]
+
+## Links
+
+- [Firebase Console](https://console.firebase.google.com/)
+- [ARCore Documentation](https://developers.google.com/ar)
+- [Material Design 3](https://m3.material.io/)
+- [Android Development](https://developer.android.com)
+
+---
+
+**Remember**: Always configure your own API keys and Firebase project before building!
