@@ -1,0 +1,21 @@
+rules_version = '2';
+
+// Firebase Storage Security Rules for Open3DMap Scanner
+service firebase.storage {
+  match /b/{bucket}/o {
+    // Allow authenticated users to upload and manage their AR scan data
+    match /ar_scans/{userId}/{allPaths=**} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+    
+    // Allow authenticated users to upload to any scan folder
+    match /ar_scans/{scanId}/{allPaths=**} {
+      allow read, write: if request.auth != null;
+    }
+    
+    // Allow any authenticated user to read/write anywhere (for testing)
+    match /{allPaths=**} {
+      allow read, write: if request.auth != null;
+    }
+  }
+} 

@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Open3DMap Brand Colors -->
+    <color name="brand_purple">#8B7DD4</color>
+    <color name="brand_purple_dark">#6B5FB8</color>
+    <color name="brand_green">#9BC53D</color>
+    <color name="brand_green_dark">#7BA328</color>
+    <color name="brand_orange">#FF8B42</color>
+    <color name="brand_orange_dark">#E6722A</color>
+    <color name="brand_teal">#4DB6AC</color>
+    <color name="brand_teal_dark">#2E7D78</color>
+    <color name="brand_navy">#1E3A5F</color>
+    <color name="brand_navy_dark">#152B47</color>
+    
+    <!-- Updated Primary Colors -->
+    <color name="purple_200">#8B7DD4</color>
+    <color name="purple_500">#6B5FB8</color>
+    <color name="purple_700">#1E3A5F</color>
+    <color name="teal_200">#4DB6AC</color>
+    <color name="teal_700">#2E7D78</color>
+    
+    <!-- Standard Colors -->
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+    <color name="grey_light">#F5F5F5</color>
+    <color name="grey_medium">#9E9E9E</color>
+    <color name="grey_dark">#424242</color>
+    
+    <!-- Accent Colors -->
+    <color name="accent_orange">#FF8B42</color>
+    <color name="accent_green">#9BC53D</color>
+    
+    <!-- Background Colors -->
+    <color name="background_light">#FAFAFA</color>
+    <color name="surface_light">#FFFFFF</color>
+    <color name="surface_dark">#1E3A5F</color>
+</resources> 
