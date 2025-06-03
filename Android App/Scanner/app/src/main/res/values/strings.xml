@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Open3D Scanner</string>
+    <string name="login_title">Sign In</string>
+    <string name="email_hint">Email</string>
+    <string name="password_hint">Password</string>
+    <string name="sign_in_button">Sign In</string>
+    <string name="sign_up_button">Sign Up</string>
+    <string name="forgot_password">Forgot Password?</string>
+    <string name="or_divider">OR</string>
+    <string name="sign_in_with_google">Sign in with Google</string>
+    <string name="scanning">Scanning...</string>
+    <string name="scan_complete">Scan Complete</string>
+    <string name="save_scan">Save Scan</string>
+    <string name="start_scan">Start Scan</string>
+    <string name="stop_scan">Stop Scan</string>
+</resources> 
