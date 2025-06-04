@@ -124,3 +124,5 @@ Android App/.idea/
 Android App/Build/.idea/
 Android App/Build/.gradle/
 Android App/Build/local.properties
+Android App/Scanner/firestore.rules.production
+Android App/Scanner/firestore.rules
