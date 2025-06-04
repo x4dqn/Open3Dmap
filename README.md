@@ -309,10 +309,6 @@ cd "Android App/Scanner"
 ./gradlew assembleDebug
 ```
 
-## Screenshots
-
-[Add screenshots of your app here]
-
 ## Architecture
 
 ```
