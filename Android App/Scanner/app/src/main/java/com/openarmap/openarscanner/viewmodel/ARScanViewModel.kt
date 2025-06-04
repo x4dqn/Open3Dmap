@@ -84,50 +84,36 @@ class ARScanViewModel : ViewModel() {
                     return@launch
                 }
 
-                // Retry logic for saving scan
-                var lastException: Exception? = null
-                for (attempt in 1..MAX_RETRY_ATTEMPTS) {
-                    try {
-                        Log.d(TAG, "Save attempt $attempt of $MAX_RETRY_ATTEMPTS")
-                        val result = repository.saveScan(updatedScanData, images)
-                        
-                        if (result.isSuccess) {
-                            Log.d(TAG, "Scan saved successfully on attempt $attempt")
-                            _scanState.value = ScanState.Saved
-                            loadUserScans() // Refresh the list
-                            return@launch
-                        } else {
-                            lastException = result.exceptionOrNull() as? Exception
-                            Log.w(TAG, "Save attempt $attempt failed", lastException)
-                        }
-                    } catch (e: Exception) {
-                        lastException = e
-                        Log.w(TAG, "Save attempt $attempt failed with exception", e)
+                // Save scan data (no retry to prevent duplicate uploads)
+                Log.d(TAG, "Attempting to save scan...")
+                val result = repository.saveScan(updatedScanData, images)
+                
+                if (result.isSuccess) {
+                    Log.d(TAG, "Scan saved successfully")
+                    _scanState.value = ScanState.Saved
+                    loadUserScans() // Refresh the list
+                } else {
+                    val exception = result.exceptionOrNull()
+                    Log.e(TAG, "Failed to save scan", exception)
+                    
+                    // Provide specific error message based on exception
+                    val errorMessage = when {
+                        exception?.message?.contains("404") == true || 
+                        exception?.message?.contains("Object does not exist") == true -> 
+                            "Firebase Storage bucket not found or incorrectly configured. Please check your Firebase project setup."
+                        exception?.message?.contains("403") == true || 
+                        exception?.message?.contains("PERMISSION_DENIED") == true -> 
+                            "Permission denied. Please check your Firebase security rules or sign in again."
+                        exception?.message?.contains("network") == true -> 
+                            "Network error. Please check your internet connection and try again."
+                        exception?.message?.contains("quota") == true -> 
+                            "Storage quota exceeded. Please contact support."
+                        else -> 
+                            "Failed to save scan: ${exception?.message ?: "Unknown error"}"
                     }
                     
-                    if (attempt < MAX_RETRY_ATTEMPTS) {
-                        Log.d(TAG, "Waiting ${RETRY_DELAY_MS}ms before retry...")
-                        delay(RETRY_DELAY_MS)
-                    }
+                    _scanState.value = ScanState.Error(errorMessage)
                 }
-                
-                // All attempts failed, provide specific error message
-                val errorMessage = when {
-                    lastException?.message?.contains("404") == true || 
-                    lastException?.message?.contains("Object does not exist") == true -> 
-                        "Firebase Storage bucket not found or incorrectly configured. Please check your Firebase project setup."
-                    lastException?.message?.contains("403") == true -> 
-                        "Permission denied. Please check your Firebase security rules."
-                    lastException?.message?.contains("network") == true -> 
-                        "Network error. Please check your internet connection and try again."
-                    lastException?.message?.contains("quota") == true -> 
-                        "Storage quota exceeded. Please contact support."
-                    else -> 
-                        "Failed to save scan after $MAX_RETRY_ATTEMPTS attempts. Please try again later."
-                }
-                
-                Log.e(TAG, "All save attempts failed. Final error: $errorMessage", lastException)
-                _scanState.value = ScanState.Error(errorMessage)
                 
             } catch (e: Exception) {
                 Log.e(TAG, "Unexpected error in saveScanData", e)
