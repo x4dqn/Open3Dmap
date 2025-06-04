@@ -152,7 +152,7 @@ The sections below refer specifically to the mobile capture tool. If you're look
 ## Installation
 
 ### Option 1: Download APK (Recommended)
-1. Download the latest APK: [Open3DMap APK](APK%20Download.zip)
+1. Download the latest APK: [Open3DMap APK](https://github.com/x4dqn/Open3Dmap/blob/main/Open3DMaps%20-%20Scanner.apk)
 2. Enable "Install from unknown sources" in your Android settings
 3. Install the downloaded APK
 4. Launch the app and grant necessary permissions
