@@ -16,9 +16,52 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import java.util.UUID
 
+/**
+ * ARScanViewModel manages the business logic and state for AR scanning operations.
+ * 
+ * This ViewModel follows the MVVM (Model-View-ViewModel) architecture pattern,
+ * serving as the bridge between the UI layer and the data layer. It handles all
+ * AR scan-related operations including saving, loading, and deleting scans.
+ * 
+ * Key Responsibilities:
+ * - Manage scan operation states (Idle, Saving, Saved, Error)
+ * - Coordinate between UI and ARScanRepository for data operations
+ * - Handle user authentication validation
+ * - Provide comprehensive error handling with user-friendly messages
+ * - Manage the list of user's scans with automatic refresh
+ * - Validate scan data and images before processing
+ * - Handle Firebase Storage connectivity and configuration
+ * 
+ * Architecture Features:
+ * - Uses LiveData for reactive UI updates
+ * - Leverages Kotlin coroutines for asynchronous operations
+ * - Implements proper error handling with specific error messages
+ * - Provides automatic retry mechanisms where appropriate
+ * - Maintains separation of concerns between UI and business logic
+ * 
+ * State Management:
+ * - scanState: Tracks the current state of scan operations
+ * - userScans: Maintains the list of user's saved scans
+ * 
+ * Thread Safety:
+ * - All operations run in viewModelScope for proper lifecycle management
+ * - LiveData ensures thread-safe UI updates
+ * - Repository operations are handled on appropriate dispatchers
+ */
 class ARScanViewModel : ViewModel() {
+    
+    /** Repository for AR scan data operations */
     private val repository = ARScanRepository()
+    
+    /** Firestore instance for direct database operations (if needed) */
     private val firestore = FirebaseFirestore.getInstance()
+    
+    /**
+     * Firebase Storage instance with fallback mechanism.
+     * 
+     * Attempts to use the explicit OpenARMap storage bucket first,
+     * then falls back to the default Firebase Storage if initialization fails.
+     */
     private val storage = try {
         Log.d(TAG, "ViewModel: Attempting to initialize Firebase Storage with explicit bucket")
         FirebaseStorage.getInstance("gs://openarmap.firebasestorage.app")
@@ -26,27 +69,58 @@ class ARScanViewModel : ViewModel() {
         Log.w(TAG, "ViewModel: Failed to initialize with explicit bucket, using default", e)
         FirebaseStorage.getInstance()
     }
+    
+    /** Firebase Authentication instance for user validation */
     private val auth = FirebaseAuth.getInstance()
     
+    /** Private mutable LiveData for scan operation state */
     private val _scanState = MutableLiveData<ScanState>(ScanState.Idle)
+    
+    /** Public read-only LiveData for scan operation state - observed by UI */
     val scanState: LiveData<ScanState> = _scanState
     
+    /** Private mutable LiveData for user's scan list */
     private val _userScans = MutableLiveData<List<ARScanData>>()
+    
+    /** Public read-only LiveData for user's scan list - observed by UI */
     val userScans: LiveData<List<ARScanData>> = _userScans
     
     companion object {
+        /** Logging tag for this ViewModel */
         private const val TAG = "ARScanViewModel"
+        
+        /** Maximum number of retry attempts for failed operations */
         private const val MAX_RETRY_ATTEMPTS = 3
+        
+        /** Delay between retry attempts in milliseconds */
         private const val RETRY_DELAY_MS = 2000L
     }
 
+    /**
+     * Saves AR scan data with associated images to Firebase backend.
+     * 
+     * This is the primary method for persisting AR scan data. It performs
+     * comprehensive validation, error handling, and state management throughout
+     * the save operation.
+     * 
+     * The method handles:
+     * - User authentication validation
+     * - Image size and count validation
+     * - Firebase Storage connectivity testing
+     * - Coordinating with ARScanRepository for actual save operation
+     * - Providing detailed error messages for different failure scenarios
+     * - Updating UI state throughout the operation
+     * 
+     * @param scanData AR scan metadata to save
+     * @param images List of image data as byte arrays
+     */
     fun saveScanData(scanData: ARScanData, images: List<ByteArray>) {
         viewModelScope.launch {
             try {
                 _scanState.value = ScanState.Saving
                 Log.d(TAG, "Starting to save scan data with ${images.size} images")
 
-                // Get current user
+                // Validate user authentication
                 val currentUser = auth.currentUser
                 if (currentUser == null) {
                     Log.e(TAG, "User not authenticated")
@@ -54,25 +128,25 @@ class ARScanViewModel : ViewModel() {
                     return@launch
                 }
 
-                // Update user ID
+                // Update scan data with current user ID
                 val updatedScanData = scanData.copy(userId = currentUser.uid)
                 
-                // Validate images
+                // Validate that images were captured
                 if (images.isEmpty()) {
                     Log.w(TAG, "No images to upload")
                     _scanState.value = ScanState.Error("No images captured. Please try scanning again.")
                     return@launch
                 }
                 
-                // Check image sizes
-                val oversizedImages = images.filter { it.size > 10 * 1024 * 1024 } // 10MB limit
+                // Check for oversized images (10MB limit per image)
+                val oversizedImages = images.filter { it.size > 10 * 1024 * 1024 }
                 if (oversizedImages.isNotEmpty()) {
                     Log.w(TAG, "Some images are too large: ${oversizedImages.size} images exceed 10MB")
                     _scanState.value = ScanState.Error("Some images are too large. Please try again with smaller images.")
                     return@launch
                 }
 
-                // Test storage connectivity before attempting upload
+                // Test Firebase Storage connectivity before attempting upload
                 try {
                     Log.d(TAG, "Testing storage connectivity...")
                     val testRef = storage.reference.child("test_connectivity_${System.currentTimeMillis()}")
@@ -84,19 +158,19 @@ class ARScanViewModel : ViewModel() {
                     return@launch
                 }
 
-                // Save scan data (no retry to prevent duplicate uploads)
+                // Attempt to save scan data (no retry to prevent duplicate uploads)
                 Log.d(TAG, "Attempting to save scan...")
                 val result = repository.saveScan(updatedScanData, images)
                 
                 if (result.isSuccess) {
                     Log.d(TAG, "Scan saved successfully")
                     _scanState.value = ScanState.Saved
-                    loadUserScans() // Refresh the list
+                    loadUserScans() // Refresh the scan list
                 } else {
                     val exception = result.exceptionOrNull()
                     Log.e(TAG, "Failed to save scan", exception)
                     
-                    // Provide specific error message based on exception
+                    // Provide specific error messages based on exception type
                     val errorMessage = when {
                         exception?.message?.contains("404") == true || 
                         exception?.message?.contains("Object does not exist") == true -> 
@@ -122,6 +196,19 @@ class ARScanViewModel : ViewModel() {
         }
     }
 
+    /**
+     * Loads all scans for the currently authenticated user.
+     * 
+     * This method retrieves the user's scan history from Firestore and updates
+     * the userScans LiveData. The scans are automatically ordered by creation
+     * date (newest first) by the repository.
+     * 
+     * The method handles:
+     * - User authentication validation
+     * - Coordinating with ARScanRepository for data retrieval
+     * - Updating the userScans LiveData with results
+     * - Graceful error handling with empty list fallback
+     */
     fun loadUserScans() {
         viewModelScope.launch {
             try {
@@ -146,13 +233,22 @@ class ARScanViewModel : ViewModel() {
         }
     }
 
+    /**
+     * Deletes a specific scan and all associated data.
+     * 
+     * This method removes a scan from both Firebase Storage (photos) and
+     * Firestore (metadata). After successful deletion, it automatically
+     * refreshes the user's scan list.
+     * 
+     * @param scanId Unique identifier of the scan to delete
+     */
     fun deleteScan(scanId: String) {
         viewModelScope.launch {
             try {
                 val result = repository.deleteScan(scanId)
                 if (result.isSuccess) {
                     Log.d(TAG, "Scan deleted successfully")
-                    // Reload scans to update the list
+                    // Reload scans to update the UI list
                     loadUserScans()
                 } else {
                     Log.e(TAG, "Failed to delete scan", result.exceptionOrNull())
@@ -163,6 +259,13 @@ class ARScanViewModel : ViewModel() {
         }
     }
 
+    /**
+     * Resets the scan state to Idle.
+     * 
+     * This method is typically called by the UI after handling a scan state
+     * change (such as displaying an error message or success notification).
+     * It allows the user to start a new scan operation.
+     */
     fun resetScanState() {
         _scanState.value = ScanState.Idle
     }
