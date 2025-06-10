@@ -168,6 +168,28 @@
 
             </LinearLayout>
 
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginBottom="8dp">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="GPS Status:"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/gpsStatusText"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="No GPS"
+                    android:textColor="@color/purple_500" />
+
+            </LinearLayout>
+
             <Button
                 android:id="@+id/closeInfoButton"
                 android:layout_width="match_parent"
