@@ -220,11 +220,42 @@ class ARScanRepository {
             Log.d(TAG, "Step 1 completed: All photos uploaded successfully")
 
             // Step 2: Create scan data with photo URLs and timestamps
-            val scanWithPhotos = updatedScanData.copy(
+            val scanWithPhotos = ARScanData(
                 id = updatedScanData.id.ifEmpty { UUID.randomUUID().toString() },
+                userId = updatedScanData.userId,
+                title = updatedScanData.title,
+                description = updatedScanData.description,
+                tags = updatedScanData.tags,
                 photoUrls = photoUrls,
                 createdAt = Date(),
-                updatedAt = Date()
+                updatedAt = Date(),
+                deviceId = updatedScanData.deviceId,
+                deviceModel = updatedScanData.deviceModel,
+                appVersion = updatedScanData.appVersion,
+                scanType = updatedScanData.scanType,
+                startTime = updatedScanData.startTime,
+                endTime = updatedScanData.endTime,
+                anchorGps = updatedScanData.anchorGps,
+                cameraIntrinsics = updatedScanData.cameraIntrinsics,
+                estimatedAreaCoveredM2 = updatedScanData.estimatedAreaCoveredM2,
+                privacyFlags = updatedScanData.privacyFlags,
+                scanNotes = updatedScanData.scanNotes,
+                dataLicense = updatedScanData.dataLicense,
+                // Legacy/compat fields:
+                userName = updatedScanData.userName,
+                latitude = updatedScanData.latitude,
+                longitude = updatedScanData.longitude,
+                altitude = updatedScanData.altitude,
+                accuracy = updatedScanData.accuracy,
+                legacyScanType = updatedScanData.legacyScanType,
+                dataUrl = updatedScanData.dataUrl,
+                dataSize = updatedScanData.dataSize,
+                uploadedFiles = updatedScanData.uploadedFiles ?: emptyList(),
+                databasePath = updatedScanData.databasePath,
+                imagesDir = updatedScanData.imagesDir,
+                sparseDir = updatedScanData.sparseDir,
+                colmapResults = updatedScanData.colmapResults ?: emptyMap(),
+                metadata = updatedScanData.metadata ?: emptyMap()
             )
 
             // Step 3: Save scan metadata to Firestore
