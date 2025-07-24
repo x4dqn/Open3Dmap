@@ -7,6 +7,7 @@ import android.graphics.BitmapFactory
 import android.graphics.ImageFormat
 import android.graphics.YuvImage
 import android.os.Bundle
+import android.content.Intent
 import android.view.MotionEvent
 import android.view.View
 import android.widget.Toast
@@ -39,6 +40,7 @@ import android.os.Looper
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import com.google.firebase.storage.FirebaseStorage
 import kotlinx.coroutines.tasks.await
 import kotlin.math.sqrt
@@ -87,6 +89,9 @@ class ARScanActivity : AppCompatActivity() {
 
         viewModel = ViewModelProvider(this)[ARScanViewModel::class.java]
         
+        // Check authentication status at startup
+        checkAuthentication()
+        
         // Initialize AR scene view directly
         arSceneView = binding.arFragment as ArSceneView
         
@@ -109,6 +114,89 @@ class ARScanActivity : AppCompatActivity() {
         }
 
         observeScanState()
+        observeUploadStatus()
+    }
+    
+    /**
+     * Observes direct upload progress and shows progress notifications
+     */
+    private fun observeUploadStatus() {
+        // Observe upload progress from the ViewModel
+        lifecycleScope.launch {
+            repeatOnLifecycle(androidx.lifecycle.Lifecycle.State.STARTED) {
+                viewModel.uploadProgress.collect { progress ->
+                    when (progress) {
+                        is com.openarmap.openarscanner.viewmodel.ARScanViewModel.UploadProgress.Uploading -> {
+                            runOnUiThread {
+                                val message = "Direct Upload: ${progress.current}/${progress.total} photos"
+                                Toast.makeText(this@ARScanActivity, message, Toast.LENGTH_SHORT).show()
+                                Log.d(TAG, "Direct upload progress: ${progress.scanId} - ${progress.current}/${progress.total}")
+                                
+                                // Update UI to show progress
+                                updateUploadProgressUI(progress.current, progress.total)
+                            }
+                        }
+                        is com.openarmap.openarscanner.viewmodel.ARScanViewModel.UploadProgress.Success -> {
+                            runOnUiThread {
+                                Toast.makeText(this@ARScanActivity, "Upload completed! ${progress.photoCount} photos uploaded", Toast.LENGTH_LONG).show()
+                                Log.d(TAG, "Direct upload completed: ${progress.scanId} with ${progress.photoCount} photos")
+                                
+                                // Hide progress UI
+                                hideUploadProgressUI()
+                            }
+                        }
+                        is com.openarmap.openarscanner.viewmodel.ARScanViewModel.UploadProgress.Failed -> {
+                            runOnUiThread {
+                                Toast.makeText(this@ARScanActivity, "Upload failed: ${progress.error}", Toast.LENGTH_LONG).show()
+                                Log.e(TAG, "Direct upload failed: ${progress.scanId} - ${progress.error}")
+                                
+                                // Hide progress UI
+                                hideUploadProgressUI()
+                            }
+                        }
+                        is com.openarmap.openarscanner.viewmodel.ARScanViewModel.UploadProgress.Idle -> {
+                            // No action needed for idle state
+                            hideUploadProgressUI()
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    /**
+     * Updates the UI to show upload progress
+     */
+    private fun updateUploadProgressUI(current: Int, total: Int) {
+        // You can add a progress bar or other UI elements here
+        // For now, we'll just log the progress
+        Log.d(TAG, "Upload progress: $current/$total")
+    }
+    
+    /**
+     * Hides the upload progress UI
+     */
+    private fun hideUploadProgressUI() {
+        // Hide any progress indicators
+        Log.d(TAG, "Upload progress UI hidden")
+    }
+    
+    private fun checkAuthentication() {
+        val auth = FirebaseAuth.getInstance()
+        val currentUser = auth.currentUser
+        
+        Log.d(TAG, "=== STARTUP AUTHENTICATION CHECK ===")
+        Log.d(TAG, "Current user: ${currentUser?.uid ?: "NULL"}")
+        Log.d(TAG, "User email: ${currentUser?.email ?: "N/A"}")
+        Log.d(TAG, "User authenticated: ${currentUser != null}")
+        
+        if (currentUser == null) {
+            Log.w(TAG, "User not authenticated - AR scanning features will require login")
+            Toast.makeText(this, "Sign in to use cloud scanning features", Toast.LENGTH_LONG).show()
+        } else {
+            Log.d(TAG, "User authenticated successfully - all features available")
+        }
+        Log.d(TAG, "======================================")
     }
 
     private fun testFirebaseConnection() {
@@ -300,6 +388,29 @@ class ARScanActivity : AppCompatActivity() {
     }
 
     private fun startCloudScanning() {
+        // CRITICAL: Verify authentication before starting cloud scanning
+        val auth = FirebaseAuth.getInstance()
+        val currentUser = auth.currentUser
+        
+        Log.d(TAG, "=== PRE-SCAN AUTHENTICATION CHECK ===")
+        Log.d(TAG, "Attempting to start cloud scanning...")
+        Log.d(TAG, "Current user: ${currentUser?.uid ?: "NULL"}")
+        Log.d(TAG, "User email: ${currentUser?.email ?: "N/A"}")
+        Log.d(TAG, "User authenticated: ${currentUser != null}")
+        
+        if (currentUser == null) {
+            Log.e(TAG, "CANNOT START CLOUD SCANNING: User not authenticated")
+            Toast.makeText(this, "Please sign in before using cloud scanning", Toast.LENGTH_LONG).show()
+            
+            // Redirect to login activity
+            val intent = Intent(this, com.openarmap.openarscanner.ui.auth.LoginActivity::class.java)
+            startActivity(intent)
+            return
+        }
+        
+        Log.d(TAG, "Authentication check PASSED - starting cloud scanning")
+        Log.d(TAG, "========================================")
+        
         isScanning = true
         scanStartTime = System.currentTimeMillis()
         frameCount = 0
@@ -307,7 +418,7 @@ class ARScanActivity : AppCompatActivity() {
         binding.scanButton.backgroundTintList = android.content.res.ColorStateList.valueOf(
             ContextCompat.getColor(this, android.R.color.holo_red_dark)
         )
-        Toast.makeText(this, "Cloud scanning started", Toast.LENGTH_SHORT).show()
+        Toast.makeText(this, "Cloud scanning started (User: ${currentUser.email})", Toast.LENGTH_SHORT).show()
         
         startScanWithName("Cloud Scan ${System.currentTimeMillis()}")
         startDurationUpdates()
@@ -842,25 +953,29 @@ class ARScanActivity : AppCompatActivity() {
     }
 
     private fun observeScanState() {
-        viewModel.scanState.observe(this) { state ->
-            when (state) {
-                is ScanState.Saving -> {
-                    binding.progressBar.visibility = View.VISIBLE
-                    binding.scanButton.isEnabled = false
-                }
-                is ScanState.Saved -> {
-                    binding.progressBar.visibility = View.GONE
-                    binding.scanButton.isEnabled = true
-                    Toast.makeText(this, "Scan saved successfully", Toast.LENGTH_SHORT).show()
-                }
-                is ScanState.Error -> {
-                    binding.progressBar.visibility = View.GONE
-                    binding.scanButton.isEnabled = true
-                    Toast.makeText(this, "Error: ${state.message}", Toast.LENGTH_SHORT).show()
-                }
-                else -> {
-                    binding.progressBar.visibility = View.GONE
-                    binding.scanButton.isEnabled = true
+        lifecycleScope.launch {
+            repeatOnLifecycle(androidx.lifecycle.Lifecycle.State.STARTED) {
+                viewModel.scanState.collect { state ->
+                    when (state) {
+                        is ScanState.Saving -> {
+                            binding.progressBar.visibility = View.VISIBLE
+                            binding.scanButton.isEnabled = false
+                        }
+                        is ScanState.Saved -> {
+                            binding.progressBar.visibility = View.GONE
+                            binding.scanButton.isEnabled = true
+                            Toast.makeText(this@ARScanActivity, "Scan saved successfully", Toast.LENGTH_SHORT).show()
+                        }
+                        is ScanState.Error -> {
+                            binding.progressBar.visibility = View.GONE
+                            binding.scanButton.isEnabled = true
+                            Toast.makeText(this@ARScanActivity, "Error: ${state.message}", Toast.LENGTH_SHORT).show()
+                        }
+                        else -> {
+                            binding.progressBar.visibility = View.GONE
+                            binding.scanButton.isEnabled = true
+                        }
+                    }
                 }
             }
         }

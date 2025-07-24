@@ -100,35 +100,58 @@ class ARScanRepository {
     }
 
     /**
-     * Saves an AR scan with photos to Firebase backend services.
+     * Saves AR scan data with associated images using direct uploads with progress tracking.
      * 
-     * This is the primary method for persisting AR scan data. It performs a complex
-     * multi-step operation:
-     * 1. Validates user authentication and input data
-     * 2. Tests Firebase Storage connectivity
-     * 3. Uploads all photos concurrently to Firebase Storage
-     * 4. Creates scan metadata with photo URLs
-     * 5. Saves metadata to Firestore
+     * This method uploads photos to Firebase Storage and saves scan metadata to Firestore.
+     * It provides real-time progress updates through the progressCallback parameter.
      * 
-     * The operation is designed to be atomic - if any step fails, the entire
-     * operation fails to prevent partial data corruption.
+     * The method handles:
+     * - User authentication validation
+     * - Concurrent photo uploads with progress tracking
+     * - Firestore metadata storage
+     * - Comprehensive error handling and logging
      * 
-     * Storage Path: ar_scans/{userId}/{scanId}/scan_{scanId}_photo_{index}_{photoId}.jpg
-     * 
-     * @param scanData AR scan metadata (user ID must be provided)
+     * @param scanData AR scan metadata to save
      * @param photos List of photo data as byte arrays
+     * @param progressCallback Callback function for upload progress updates (current, total)
      * @return Result<ARScanData> containing saved scan with photo URLs or error
      * 
      * @throws Exception if user ID is empty or Firebase services are unavailable
      */
-    suspend fun saveScan(scanData: ARScanData, photos: List<ByteArray>): Result<ARScanData> = withContext(Dispatchers.IO) {
+    suspend fun saveScanWithProgress(
+        scanData: ARScanData, 
+        photos: List<ByteArray>,
+        progressCallback: (current: Int, total: Int) -> Unit
+    ): Result<ARScanData> = withContext(Dispatchers.IO) {
         try {
-            Log.d(TAG, "Starting to save scan with ${photos.size} photos")
+            Log.d(TAG, "Starting to save scan with progress tracking - ${photos.size} photos")
             Log.d(TAG, "Using storage bucket: ${storage.app.options.storageBucket}")
             Log.d(TAG, "Saving scan for user: ${scanData.userId}")
             
+            // CRITICAL: Validate user authentication BEFORE attempting any uploads
+            val currentUser = FirebaseAuth.getInstance().currentUser
+            if (currentUser == null) {
+                Log.e(TAG, "AUTHENTICATION ERROR: No authenticated user found")
+                Log.e(TAG, "Cannot upload to Firebase Storage without authentication")
+                throw Exception("User not authenticated. Please sign in and try again.")
+            }
+            
+            Log.d(TAG, "Authentication validated - User: ${currentUser.uid}")
+            Log.d(TAG, "User email: ${currentUser.email}")
+            Log.d(TAG, "User is anonymous: ${currentUser.isAnonymous}")
+            
+            // Ensure user ID matches authenticated user
+            val updatedScanData = if (scanData.userId != currentUser.uid) {
+                Log.e(TAG, "USER ID MISMATCH: scanData.userId=${scanData.userId}, auth.uid=${currentUser.uid}")
+                Log.e(TAG, "Updating scanData.userId to match authenticated user")
+                // Update scanData with correct user ID
+                scanData.copy(userId = currentUser.uid)
+            } else {
+                scanData
+            }
+            
             // Validate that userId is provided
-            if (scanData.userId.isEmpty()) {
+            if (updatedScanData.userId.isEmpty()) {
                 Log.e(TAG, "User ID is empty - cannot save scan without user context")
                 throw Exception("User ID is required to save scan")
             }
@@ -143,66 +166,85 @@ class ARScanRepository {
                 throw Exception("Firebase Storage is not accessible: ${e.message}", e)
             }
             
-            // Step 1: Upload photos concurrently (no retry to prevent duplicates)
-            Log.d(TAG, "Step 1: Uploading photos to storage...")
-            val photoUrls = photos.mapIndexed { index, photo ->
-                async {
-                    try {
-                        val scanId = scanData.id.ifEmpty { UUID.randomUUID().toString() }
-                        val photoId = UUID.randomUUID().toString()
-                        val fileName = "scan_${scanId}_photo_${index}_${photoId}.jpg"
-                        
-                        // Create user-organized storage reference: ar_scans/{userId}/{scanId}/{fileName}
-                        val photoRef = storage.reference
-                            .child("ar_scans")
-                            .child(scanData.userId)  // User-specific folder
-                            .child(scanId)           // Scan-specific folder
-                            .child(fileName)         // Unique filename
-                        
-                        Log.d(TAG, "Uploading photo $index to: ${photoRef.path}")
-                        Log.d(TAG, "User-organized path: ar_scans/${scanData.userId}/${scanId}/${fileName}")
-                        Log.d(TAG, "Storage reference bucket: ${photoRef.bucket}")
-                        Log.d(TAG, "Photo size: ${photo.size} bytes")
-                        
-                        // Upload the photo bytes to Firebase Storage
-                        val uploadTask = photoRef.putBytes(photo).await()
-                        Log.d(TAG, "Photo $index uploaded successfully, bytes transferred: ${uploadTask.bytesTransferred}")
-                        
-                        // Get the download URL for the uploaded photo
-                        val downloadUrl = photoRef.downloadUrl.await().toString()
-                        Log.d(TAG, "Photo $index download URL obtained: $downloadUrl")
-                        
-                        downloadUrl
-                    } catch (e: Exception) {
-                        Log.e(TAG, "Error uploading photo $index", e)
-                        Log.e(TAG, "Error details - Message: ${e.message}")
-                        Log.e(TAG, "Error details - Cause: ${e.cause}")
-                        if (e is com.google.firebase.storage.StorageException) {
-                            Log.e(TAG, "Storage error code: ${e.errorCode}")
-                            Log.e(TAG, "Storage HTTP result: ${e.httpResultCode}")
-                        }
-                        throw e
+            // Step 1: Upload photos with progress tracking
+            Log.d(TAG, "Step 1: Uploading photos to storage with progress tracking...")
+            val photoUrls = mutableListOf<String>()
+            
+            photos.forEachIndexed { index, photo ->
+                try {
+                    val scanId = updatedScanData.id.ifEmpty { UUID.randomUUID().toString() }
+                    val photoId = UUID.randomUUID().toString()
+                    val fileName = "scan_${scanId}_photo_${index}_${photoId}.jpg"
+                    
+                    // Create user-organized storage reference: ar_scans/{userId}/{scanId}/{fileName}
+                    val photoRef = storage.reference
+                        .child("ar_scans")
+                        .child(updatedScanData.userId)  // User-specific folder
+                        .child(scanId)           // Scan-specific folder
+                        .child(fileName)         // Unique filename
+                    
+                    Log.d(TAG, "Uploading photo $index to: ${photoRef.path}")
+                    Log.d(TAG, "User-organized path: ar_scans/${updatedScanData.userId}/${scanId}/${fileName}")
+                    Log.d(TAG, "Storage reference bucket: ${photoRef.bucket}")
+                    Log.d(TAG, "Photo size: ${photo.size} bytes")
+                    
+                    // Upload the photo bytes to Firebase Storage
+                    val uploadTask = photoRef.putBytes(photo).await()
+                    Log.d(TAG, "Photo $index uploaded successfully, bytes transferred: ${uploadTask.bytesTransferred}")
+                    
+                    // DEBUGGING: Add small delay to ensure file is fully propagated before getting download URL
+                    kotlinx.coroutines.delay(100) // 100ms delay
+                    
+                    // Get the download URL for the uploaded photo
+                    Log.d(TAG, "Attempting to get download URL for photo $index...")
+                    val downloadUrl = photoRef.downloadUrl.await().toString()
+                    Log.d(TAG, "Photo $index download URL obtained successfully: $downloadUrl")
+                    
+                    photoUrls.add(downloadUrl)
+                    
+                    // Update progress
+                    progressCallback(index + 1, photos.size)
+                    
+                } catch (e: Exception) {
+                    Log.e(TAG, "Error uploading photo $index", e)
+                    Log.e(TAG, "Error details - Message: ${e.message}")
+                    Log.e(TAG, "Error details - Cause: ${e.cause}")
+                    if (e is com.google.firebase.storage.StorageException) {
+                        Log.e(TAG, "Storage error code: ${e.errorCode}")
+                        Log.e(TAG, "Storage HTTP result: ${e.httpResultCode}")
                     }
+                    throw e
                 }
-            }.awaitAll()
+            }
 
             Log.d(TAG, "Step 1 completed: All photos uploaded successfully")
 
             // Step 2: Create scan data with photo URLs and timestamps
-            val scanWithPhotos = scanData.copy(
-                id = scanData.id.ifEmpty { UUID.randomUUID().toString() },
+            val scanWithPhotos = updatedScanData.copy(
+                id = updatedScanData.id.ifEmpty { UUID.randomUUID().toString() },
                 photoUrls = photoUrls,
                 createdAt = Date(),
                 updatedAt = Date()
             )
 
-            // Step 3: Save metadata to Firestore
+            // Step 3: Save scan metadata to Firestore
             Log.d(TAG, "Step 2: Saving scan metadata to Firestore...")
-            scansCollection.document(scanWithPhotos.id).set(scanWithPhotos).await()
-            
+            val docRef = scansCollection.document(scanWithPhotos.id)
+            docRef.set(scanWithPhotos).await()
+            Log.d(TAG, "Step 2 completed: Scan metadata saved to Firestore")
+
+            Log.d(TAG, "=== UPLOAD SUMMARY ===")
+            Log.d(TAG, "Scan ID: ${scanWithPhotos.id}")
+            Log.d(TAG, "User ID: ${scanWithPhotos.userId}")
+            Log.d(TAG, "Photos uploaded: ${photoUrls.size}")
+            Log.d(TAG, "Total data size: ${photos.sumOf { it.size }} bytes")
+            Log.d(TAG, "Firestore document: ${docRef.path}")
+            Log.d(TAG, "========================")
+
             Result.success(scanWithPhotos)
+
         } catch (e: Exception) {
-            Log.e(TAG, "Error saving scan", e)
+            Log.e(TAG, "Error saving scan with progress", e)
             Result.failure(e)
         }
     }
@@ -225,27 +267,36 @@ class ARScanRepository {
     }
 
     /**
-     * Retrieves all AR scans for a specific user.
+     * Gets all scans for a specific user.
      * 
-     * Returns scans ordered by creation date (newest first) for optimal
-     * user experience in list views.
-     * 
-     * @param userId Firebase UID of the user whose scans to retrieve
-     * @return Result<List<ARScanData>> containing the user's scans or error
+     * @param userId The user ID to get scans for
+     * @return List of ARScanData for the user, ordered by creation date (newest first)
      */
-    suspend fun getUserScans(userId: String): Result<List<ARScanData>> = withContext(Dispatchers.IO) {
+    suspend fun getUserScans(userId: String): List<ARScanData> = withContext(Dispatchers.IO) {
         try {
+            Log.d(TAG, "Loading scans for user: $userId")
+            
             val snapshot = scansCollection
                 .whereEqualTo("userId", userId)
                 .orderBy("createdAt", com.google.firebase.firestore.Query.Direction.DESCENDING)
                 .get()
                 .await()
             
-            val scans = snapshot.toObjects(ARScanData::class.java)
-            Result.success(scans)
+            val scans = snapshot.documents.mapNotNull { doc ->
+                try {
+                    doc.toObject(ARScanData::class.java)?.copy(id = doc.id)
+                } catch (e: Exception) {
+                    Log.w(TAG, "Error parsing scan document ${doc.id}", e)
+                    null
+                }
+            }
+            
+            Log.d(TAG, "Loaded ${scans.size} scans for user $userId")
+            scans
+            
         } catch (e: Exception) {
-            Log.e(TAG, "Error getting user scans", e)
-            Result.failure(e)
+            Log.e(TAG, "Error loading user scans for user $userId", e)
+            emptyList()
         }
     }
 
@@ -275,40 +326,104 @@ class ARScanRepository {
     }
 
     /**
-     * Deletes an AR scan and all associated photos.
+     * Deletes a scan and all associated data for a specific user.
      * 
-     * This method performs a complete cleanup:
-     * 1. Retrieves the scan to get photo URLs
-     * 2. Deletes all photos from Firebase Storage
-     * 3. Deletes the metadata document from Firestore
-     * 
-     * The operation continues even if some photo deletions fail,
-     * ensuring the metadata is always cleaned up.
-     * 
-     * @param id Unique identifier of the scan to delete
-     * @return Result<Unit> indicating success or failure
+     * @param scanId The scan ID to delete
+     * @param userId The user ID (for security validation)
+     * @return true if deletion was successful, false otherwise
      */
-    suspend fun deleteScan(id: String): Result<Unit> = withContext(Dispatchers.IO) {
+    suspend fun deleteScan(scanId: String, userId: String): Boolean = withContext(Dispatchers.IO) {
         try {
-            // Get the scan data first to access photo URLs
-            val scan = getScan(id).getOrNull()
+            Log.d(TAG, "Deleting scan $scanId for user $userId")
             
-            // Delete all associated photos from Firebase Storage
-            scan?.photoUrls?.forEach { photoUrl ->
-                try {
-                    storage.getReferenceFromUrl(photoUrl).delete().await()
-                } catch (e: Exception) {
-                    Log.w(TAG, "Error deleting photo: $photoUrl", e)
-                    // Continue with other deletions even if one fails
+            // First, verify the scan belongs to the user
+            val scanDoc = scansCollection.document(scanId).get().await()
+            if (!scanDoc.exists()) {
+                Log.w(TAG, "Scan $scanId does not exist")
+                false
+            } else {
+                val scanData = scanDoc.toObject(ARScanData::class.java)
+                if (scanData?.userId != userId) {
+                    Log.w(TAG, "Scan $scanId does not belong to user $userId")
+                    false
+                } else {
+                    // Delete photos from Firebase Storage
+                    scanData.photoUrls.forEach { photoUrl ->
+                        try {
+                            // Extract storage path from download URL
+                            val storagePath = extractStoragePathFromUrl(photoUrl)
+                            if (storagePath != null) {
+                                val photoRef = storage.reference.child(storagePath)
+                                photoRef.delete().await()
+                                Log.d(TAG, "Deleted photo: $storagePath")
+                            }
+                        } catch (e: Exception) {
+                            Log.w(TAG, "Failed to delete photo: $photoUrl", e)
+                            // Continue with other deletions even if one fails
+                        }
+                    }
+                    
+                    // Delete the scan document from Firestore
+                    scansCollection.document(scanId).delete().await()
+                    Log.d(TAG, "Deleted scan document: $scanId")
+                    
+                    true
                 }
             }
-            
-            // Delete the metadata document from Firestore
-            scansCollection.document(id).delete().await()
-            Result.success(Unit)
         } catch (e: Exception) {
-            Log.e(TAG, "Error deleting scan", e)
-            Result.failure(e)
+            Log.e(TAG, "Error deleting scan $scanId", e)
+            false
+        }
+    }
+
+    /**
+     * Updates scan metadata for a specific user.
+     * 
+     * @param scanId The scan ID to update
+     * @param userId The user ID (for security validation)
+     * @param title New title for the scan
+     * @param description New description for the scan
+     * @param tags New tags for the scan
+     * @return true if update was successful, false otherwise
+     */
+    suspend fun updateScanMetadata(
+        scanId: String, 
+        userId: String, 
+        title: String, 
+        description: String, 
+        tags: List<String>
+    ): Boolean = withContext(Dispatchers.IO) {
+        try {
+            Log.d(TAG, "Updating metadata for scan $scanId")
+            
+            // First, verify the scan belongs to the user
+            val scanDoc = scansCollection.document(scanId).get().await()
+            if (!scanDoc.exists()) {
+                Log.w(TAG, "Scan $scanId does not exist")
+                false
+            } else {
+                val scanData = scanDoc.toObject(ARScanData::class.java)
+                if (scanData?.userId != userId) {
+                    Log.w(TAG, "Scan $scanId does not belong to user $userId")
+                    false
+                } else {
+                    // Update the scan metadata
+                    val updates = mapOf(
+                        "title" to title,
+                        "description" to description,
+                        "tags" to tags,
+                        "updatedAt" to Date()
+                    )
+                    
+                    scansCollection.document(scanId).update(updates).await()
+                    Log.d(TAG, "Updated scan metadata: $scanId")
+                    
+                    true
+                }
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error updating scan metadata $scanId", e)
+            false
         }
     }
 
@@ -340,23 +455,25 @@ class ARScanRepository {
     }
 
     /**
-     * Test method to verify Firestore connectivity and authentication.
+     * Enhanced test method to verify Firebase Storage and Firestore connectivity and authentication.
      * 
-     * This diagnostic method helps troubleshoot permission and connectivity issues
-     * by testing the complete authentication and database access workflow.
+     * This comprehensive diagnostic method helps troubleshoot permission and connectivity issues
+     * by testing the complete authentication, storage, and database access workflow.
      * 
      * The test performs:
-     * 1. Checks user authentication status
-     * 2. Attempts to write to a test collection
-     * 3. Attempts to write to the ar_scans collection
-     * 4. Provides detailed logging for debugging
+     * 1. Checks user authentication status with detailed logging
+     * 2. Tests Firebase Storage connectivity and upload permissions
+     * 3. Attempts to write to a test collection in Firestore
+     * 4. Attempts to write to the ar_scans collection
+     * 5. Tests both storage upload and download capabilities
+     * 6. Provides detailed logging for debugging
      * 
      * Call this method before attempting to save scans if you encounter
      * permission or connectivity issues.
      * 
      * @return Result<String> with success message or detailed error information
      */
-    suspend fun testFirestoreConnection(): Result<String> = withContext(Dispatchers.IO) {
+    suspend fun testFirebaseConnection(): Result<String> = withContext(Dispatchers.IO) {
         try {
             val auth = FirebaseAuth.getInstance()
             val currentUser = auth.currentUser
@@ -398,11 +515,64 @@ class ARScanRepository {
                 .set(testScanData).await()
             
             Log.d(TAG, "Test scan document created successfully!")
-            Result.success("Firestore connection test passed")
+            
+            // Test 3: Test Firebase Storage upload
+            Log.d(TAG, "Testing Firebase Storage upload...")
+            val testFileName = "storage_test_${System.currentTimeMillis()}.txt"
+            val testContent = "Firebase Storage test content - ${System.currentTimeMillis()}"
+            val testBytes = testContent.toByteArray()
+            
+            val storageRef = storage.reference
+                .child("test_uploads")
+                .child(currentUser.uid)
+                .child(testFileName)
+            
+            Log.d(TAG, "Uploading test file to: ${storageRef.path}")
+            Log.d(TAG, "Storage bucket: ${storageRef.bucket}")
+            val uploadTask = storageRef.putBytes(testBytes).await()
+            Log.d(TAG, "Storage upload successful, bytes transferred: ${uploadTask.bytesTransferred}")
+            
+            // Test 4: Test Firebase Storage download URL
+            Log.d(TAG, "Testing Firebase Storage download URL...")
+            val downloadUrl = storageRef.downloadUrl.await().toString()
+            Log.d(TAG, "Download URL obtained successfully: $downloadUrl")
+            
+            // Test 5: Clean up test file
+            Log.d(TAG, "Cleaning up test storage file...")
+            try {
+                storageRef.delete().await()
+                Log.d(TAG, "Test storage file deleted successfully")
+            } catch (e: Exception) {
+                Log.w(TAG, "Failed to delete test storage file (non-critical)", e)
+            }
+            
+            Result.success("ALL TESTS PASSED! Authentication, Firestore, and Storage are working correctly.")
             
         } catch (e: Exception) {
             Log.e(TAG, "Firestore connection test failed", e)
             Result.failure(e)
+        }
+    }
+
+    /**
+     * Extracts the Firebase Storage path from a download URL.
+     * 
+     * @param downloadUrl The Firebase Storage download URL
+     * @return The storage path or null if extraction fails
+     */
+    private fun extractStoragePathFromUrl(downloadUrl: String): String? {
+        return try {
+            val url = java.net.URL(downloadUrl)
+            val path = url.path
+            if (path.startsWith("/o/")) {
+                val encodedPath = path.substring(3)
+                java.net.URLDecoder.decode(encodedPath, "UTF-8")
+            } else {
+                null
+            }
+        } catch (e: Exception) {
+            Log.w(TAG, "Failed to extract storage path from URL: $downloadUrl", e)
+            null
         }
     }
 } 

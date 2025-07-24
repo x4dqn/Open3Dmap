@@ -27,7 +27,42 @@ data class ARScanData(
     val estimatedAreaCoveredM2: Float? = null,
     val privacyFlags: Int = 0,
     val scanNotes: String? = null,
-    val dataLicense: String = "CC-BY"
+    val dataLicense: String = "CC-BY",
+
+    // === Legacy/Additional Fields Restored ===
+    /** Display name of the scan creator (cached from user profile for performance) */
+    val userName: String? = null,
+
+    /** GPS latitude coordinate where the scan was captured (decimal degrees) */
+    val latitude: Double? = null,
+    /** GPS longitude coordinate where the scan was captured (decimal degrees) */
+    val longitude: Double? = null,
+    /** GPS altitude coordinate in meters above sea level */
+    val altitude: Double? = null,
+    /** GPS accuracy in meters - lower values indicate more precise location data */
+    val accuracy: Float? = null,
+
+    /** Type of AR data captured: "POINT_CLOUD", "MESH", "IMAGE", or custom types */
+    val legacyScanType: String? = null,
+    /** Firebase Storage URL where the actual scan data file is stored */
+    val dataUrl: String? = null,
+    /** Size of the scan data file in bytes - used for storage management and UI */
+    val dataSize: Long? = null,
+
+    /** List of uploaded file paths (for COLMAP or other processing) */
+    val uploadedFiles: List<String>? = null,
+    /** Path to COLMAP database file */
+    val databasePath: String? = null,
+    /** Path to images directory for COLMAP */
+    val imagesDir: String? = null,
+    /** Path to sparse directory for COLMAP */
+    val sparseDir: String? = null,
+    /** COLMAP results or other processing results (as a map) */
+    val colmapResults: Map<String, Any?>? = null,
+
+    // === Extensible Metadata ===
+    /** Additional metadata as key-value pairs for future features and customization */
+    val metadata: Map<String, String>? = null
 ) {
     enum class ScanType {
         WALK_THROUGH,

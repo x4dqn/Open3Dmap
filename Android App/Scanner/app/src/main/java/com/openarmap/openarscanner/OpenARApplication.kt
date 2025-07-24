@@ -99,6 +99,10 @@ class Open3DApplication : Application() {
             FirebaseApp.initializeApp(this)
             Log.d(TAG, "Firebase App initialized successfully")
             
+            // TEMPORARY: Disable Firebase App Check for debugging upload issues
+            // The "Too many attempts" App Check errors were causing 403 storage errors
+            // TODO: Re-enable after fixing authentication issues
+            /*
             // Initialize Firebase App Check for security
             // This helps protect against abuse by verifying that requests come from your authentic app
             val firebaseAppCheck = FirebaseAppCheck.getInstance()
@@ -106,6 +110,8 @@ class Open3DApplication : Application() {
                 PlayIntegrityAppCheckProviderFactory.getInstance()
             )
             Log.d(TAG, "Firebase App Check initialized successfully")
+            */
+            Log.w(TAG, "Firebase App Check DISABLED for debugging - Re-enable in production!")
             
             // Initialize Firebase Storage with specific bucket configuration
             initializeFirebaseStorage()

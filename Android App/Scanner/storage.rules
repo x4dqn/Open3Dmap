@@ -1,21 +1,33 @@
 rules_version = '2';
 
 // Firebase Storage Security Rules for Open3DMap Scanner
+// PRODUCTION RULES - Secure user-specific access
 service firebase.storage {
   match /b/{bucket}/o {
-    // Allow authenticated users to upload and manage their AR scan data
+    
+    // AR SCAN DATA - Users can only access their own scan data
     match /ar_scans/{userId}/{allPaths=**} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
+      allow read, write: if request.auth != null 
+                        && request.auth.uid == userId
+                        && request.resource.size < 10 * 1024 * 1024;
     }
     
-    // Allow authenticated users to upload to any scan folder
-    match /ar_scans/{scanId}/{allPaths=**} {
-      allow read, write: if request.auth != null;
+    // TEST UPLOADS - Users can manage their own test files
+    match /test_uploads/{userId}/{allPaths=**} {
+      allow read, write: if request.auth != null 
+                        && request.auth.uid == userId;
     }
     
-    // Allow any authenticated user to read/write anywhere (for testing)
+    // CONNECTIVITY TESTS - Allow authenticated users to test connectivity
     match /{allPaths=**} {
-      allow read, write: if request.auth != null;
+      allow read, write: if request.auth != null 
+                        && resource.name.matches('connectivity_test_.*');
+    }
+    
+    // PUBLIC DATA - Read-only for everyone, write for authenticated users
+    match /public/{allPaths=**} {
+      allow read: if true;
+      allow write: if request.auth != null;
     }
   }
-} 
+}
