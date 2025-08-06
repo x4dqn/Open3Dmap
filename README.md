@@ -46,7 +46,7 @@ The full Open3DMap platform will eventually include:
 - iOS version and cross-device consistency tooling
 
 **2. Cloud Processing & Metadata**
-- 🔄 User authentication and login system (in development)
+- ✅ User authentication and login system
 - 🔄 Web-based scan upload and management (in development)
 - A fast, mobile-optimized reconstruction pipeline using 3D Gaussian splatting, built for ease of use, contributor feedback, and civic-scale mapping
 - Scan quality validation (coverage, density, drift)
@@ -56,8 +56,8 @@ The full Open3DMap platform will eventually include:
 - Incremental scan integration: enable contributors to extend, update, and refine existing scans collaboratively
 
 **3. Web Portal and Dashboard**
-- 🔄 Basic scan viewer and  management interface (in development)
-- 🔄 Contributor dashboards (in development)
+- ✅ Basic scan viewer and  management interface
+- ✅ Contributor dashboards
 - Map-based scan viewer and explorer
 - Advanced contributor dashboards and scan management
 - Export options: .splat, .splatjson, .glb, .ply, .usdz, .obj
