@@ -103,16 +103,16 @@ The full Open3DMap platform will eventually include:
 - Open datasets for accessibility, robotics, and urban research
 -->
 
-At this stage, the repository includes the Android app for data capture and the open SplatJSON specification with examples. Future components will be added incrementally as they are developed and tested.
+At this stage, the repository includes the Android app for data capture, an outline of our website, and the open SplatJSON specification with examples. Future components will be added incrementally as they are developed and tested.
 
 
 ## Coming Soon: Contributor Login and Cloud Pipeline
 
-We are actively building out user authentication and cloud integration to support a seamless contributor workflow. This will enable users to:
+We are actively building out cloud integration to support a seamless contributor workflow. This will enable users to:
 
 - Log in via email-based authentication (mobile-first)
 - Capture scans using the Open3DMap Android app
-- Upload scans directly to the cloud
+- Upload scans automatically to the cloud
 - View and manage their uploaded scans on the web, including metadata, filtering, and map-based visualization
 
 As part of this pipeline, each scan will be automatically paired with a structured .splatjson metadata file. This file contains GPS coordinates, orientation, device and capture metadata, file URLs, and licensing information—enabling integration with maps, viewers, and third-party spatial tools.
@@ -136,8 +136,7 @@ The sections below refer specifically to the mobile capture tool. If you're look
 - Automatic frame capture with quality assessment
 - GPS location tracking for outdoor scans
 - IMU data capture (accelerometer and gyroscope)
-- Export functionality with SplatJSON metadata format
-- Export functionality with INRIA-compatible format
+- Export functionality
 - Scan management (rename, delete, export)
 - Quality metrics for optimal capture
 
@@ -152,7 +151,7 @@ The sections below refer specifically to the mobile capture tool. If you're look
 ## Installation
 
 ### Option 1: Download APK (Recommended)
-1. Download the latest APK: [Open3DMap APK](https://github.com/x4dqn/Open3Dmap/blob/main/Open3DMaps%20-%20Scanner.apk)
+1. Download the latest APK: [Open3DMap APK](https://github.com/x4dqn/Open3Dmap/blob/main/Open3DMap%20-%20Scanner.apk)
 2. Enable "Install from unknown sources" in your Android settings
 3. Install the downloaded APK
 4. Launch the app and grant necessary permissions
@@ -167,13 +166,13 @@ cd Open3DMap
 2. Open the project in Android Studio:
    - Open Android Studio
    - Select "Open an existing project"
-   - Navigate to the `AndroidApp/Bot` directory
+   - Navigate to the `AndroidApp/Scanner` directory
    - Click "OK"
 
 3. Build and run:
    - Connect your Android device
+   - Select your device from the device list
    - Click the "Run" button (green play icon)
-   - Select your device from the list
    - Wait for the app to install and launch
 
 ## Usage
@@ -182,20 +181,13 @@ cd Open3DMap
 
 1. Launch the app and grant necessary permissions
 2. Press "Start Scan" to begin a new capture session
-3. Enter a name for your scan (optional)
-4. Move your device slowly through the space:
+3. Move your device slowly through the space:
    - Keep the camera pointed at textured surfaces
+   - Capture several overlapping angles
    - Maintain good lighting conditions
    - Move at a walking pace
    - Avoid rapid movements or rotations
 5. Press "Stop Scan" when finished
-
-### Managing Scans
-
-- **Export**: Press the export button to view all scans
-- **Rename**: Long-press a scan or use the rename button
-- **Delete**: Use the delete button or long-press menu
-- **View Details**: Tap a scan to see its details
 
 ### Export File Structure
 
@@ -254,7 +246,7 @@ The viewer supports:
 1. **Poor Tracking**
    - Ensure good lighting conditions
    - Move more slowly
-   - Point camera at textured surfaces
+   - Point the camera at textured surfaces
    - Avoid reflective or transparent surfaces
 
 2. **Export Failures**
