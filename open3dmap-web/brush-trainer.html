@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Brush Trainer - Open3DMap</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #1a1a1a;
+            color: #fff;
+        }
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #333;
+        }
+        .dataset-info {
+            background: #2a2a2a;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .dataset-info h3 {
+            margin-top: 0;
+            color: #4CAF50;
+        }
+        .training-controls {
+            background: #2a2a2a;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .btn {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-right: 10px;
+        }
+        .btn:hover {
+            background: #45a049;
+        }
+        .btn:disabled {
+            background: #666;
+            cursor: not-allowed;
+        }
+        .btn-secondary {
+            background: #666;
+        }
+        .btn-secondary:hover {
+            background: #777;
+        }
+        .btn-danger {
+            background: #f44336;
+        }
+        .btn-danger:hover {
+            background: #da190b;
+        }
+        .status {
+            background: #2a2a2a;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+        .error {
+            color: #ff6b6b;
+        }
+        .success {
+            color: #4CAF50;
+        }
+        .info {
+            color: #74c0fc;
+        }
+        .brush-container {
+            width: 100%;
+            height: 600px;
+            background: #333;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-top: 20px;
+            position: relative;
+        }
+        .brush-placeholder {
+            text-align: center;
+            color: #999;
+        }
+        .progress-container {
+            width: 100%;
+            background: #1a1a1a;
+            border-radius: 8px;
+            padding: 20px;
+            display: none;
+        }
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background: #333;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 10px;
+        }
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #4CAF50, #45a049);
+            transition: width 0.3s ease;
+            width: 0%;
+        }
+        .progress-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+            margin-top: 15px;
+        }
+        .stat-item {
+            background: #2a2a2a;
+            padding: 10px;
+            border-radius: 6px;
+            text-align: center;
+        }
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #4CAF50;
+        }
+        .stat-label {
+            font-size: 12px;
+            color: #999;
+            margin-top: 5px;
+        }
+        .canvas-container {
+            width: 100%;
+            height: 100%;
+            position: relative;
+        }
+        #brush-canvas {
+            width: 100%;
+            height: 100%;
+            border-radius: 8px;
+        }
+        .training-log {
+            background: #1a1a1a;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            max-height: 300px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            line-height: 1.4;
+        }
+        .log-entry {
+            margin-bottom: 5px;
+            padding: 2px 0;
+        }
+        .log-timestamp {
+            color: #666;
+            margin-right: 10px;
+        }
+        .log-info { color: #74c0fc; }
+        .log-success { color: #4CAF50; }
+        .log-error { color: #ff6b6b; }
+        .log-warning { color: #ffa726; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Brush Gaussian Splat Trainer</h1>
+        <div>
+            <span id="auth-status" style="margin-right: 15px; color: #999;">Checking auth...</span>
+            <button class="btn btn-secondary" onclick="window.close()">Close</button>
+        </div>
+    </div>
+
+    <div class="dataset-info" id="dataset-info">
+        <h3>Loading dataset...</h3>
+    </div>
+
+    <div class="training-controls">
+        <button class="btn" id="load-dataset-btn" onclick="loadColmapDataset()" disabled>
+            Load COLMAP Dataset
+        </button>
+        <button class="btn" id="start-training-btn" onclick="startTraining()" disabled>
+            Start Training
+        </button>
+        <button class="btn btn-danger" id="stop-training-btn" onclick="stopTraining()" disabled>
+            Stop Training
+        </button>
+        <button class="btn btn-secondary" onclick="exportSplats()" disabled id="export-btn">
+            Export Splats
+        </button>
+        <button class="btn btn-secondary" onclick="downloadDataset()">
+            Download Dataset
+        </button>
+    </div>
+
+    <div class="progress-container" id="progress-container">
+        <h3>Training Progress</h3>
+        <div class="progress-bar">
+            <div class="progress-fill" id="progress-fill"></div>
+        </div>
+        <div id="progress-text">Starting training...</div>
+        
+        <div class="progress-stats" id="progress-stats">
+            <div class="stat-item">
+                <div class="stat-value" id="step-count">0</div>
+                <div class="stat-label">Training Steps</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="loss-value">0.0</div>
+                <div class="stat-label">Loss</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="psnr-value">0.0</div>
+                <div class="stat-label">PSNR (dB)</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="splat-count">0</div>
+                <div class="stat-label">Splats</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="elapsed-time">0.0s</div>
+                <div class="stat-label">Elapsed Time</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="learning-rate">0.0</div>
+                <div class="stat-label">Learning Rate</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="brush-container" id="brush-container">
+        <div class="brush-placeholder" id="brush-placeholder">
+            <h3>Brush Trainer Interface</h3>
+            <p>Load a COLMAP dataset to begin training</p>
+            <p><small>WebGPU-powered Gaussian Splat training in your browser</small></p>
+        </div>
+        <div class="canvas-container" id="canvas-container" style="display: none;">
+            <canvas id="brush-canvas"></canvas>
+        </div>
+    </div>
+
+    <div class="training-log" id="training-log" style="display: none;">
+        <h4>Training Log</h4>
+        <div id="log-entries"></div>
+    </div>
+
+    <div class="status" id="status">
+        <div class="info">Ready to train Gaussian Splat model from COLMAP data</div>
+    </div>
+
+    <!-- Firebase SDK v11+ Modular -->
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.8.1/firebase-app.js';
+        import { getAuth, signInWithPopup, GoogleAuthProvider, GithubAuthProvider, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut as firebaseSignOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/11.8.1/firebase-auth.js';
+        import { getFirestore, collection, addDoc, getDocs, doc, getDoc, updateDoc, deleteDoc, query, where, orderBy, limit, serverTimestamp } from 'https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js';
+        import { getStorage, ref as storageRef, getDownloadURL, uploadBytes, deleteObject, listAll } from 'https://www.gstatic.com/firebasejs/11.8.1/firebase-storage.js';
+        import { getAnalytics } from 'https://www.gstatic.com/firebasejs/11.8.1/firebase-analytics.js';
+
+        window.firebaseModules = {
+            GoogleAuthProvider, GithubAuthProvider, signInWithPopup,
+            signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut: firebaseSignOut, onAuthStateChanged,
+            collection, addDoc, getDocs, doc, getDoc, updateDoc, deleteDoc, query, where, orderBy, limit, serverTimestamp,
+            storageRef, getDownloadURL, uploadBytes, deleteObject, listAll
+        };
+
+        const { firebaseConfig } = await import('./js/firebase-config.js');
+
+        const app = initializeApp(firebaseConfig);
+        window.firebaseServices = {
+            app: app,
+            auth: getAuth(app),
+            firestore: getFirestore(app),
+            storage: getStorage(app),
+            analytics: getAnalytics(app)
+        };
+
+        console.log('✅ Firebase v11 initialized successfully in brush trainer');
+        window.dispatchEvent(new CustomEvent('firebaseReady'));
+    </script>
+
+    <!-- Load Brush WASM Module -->
+    <script type="module">
+        import init, { BrushTrainer, get_version, test_brush_integration } from './brush-wasm/pkg/brush_wasm.js';
+
+        let brushTrainer = null;
+        let currentUser = null;
+        let datasetInfo = null;
+        let isTraining = false;
+
+        // Initialize WASM module
+        async function initializeBrushWasm() {
+            try {
+                await init();
+                console.log('✅ Brush WASM module loaded successfully');
+                console.log('Version:', get_version());
+                console.log('Test:', test_brush_integration());
+                
+                // Initialize BrushTrainer with canvas
+                const canvas = document.getElementById('brush-canvas');
+                brushTrainer = new BrushTrainer(canvas);
+                
+                // Set up progress callback
+                brushTrainer.set_progress_callback((progress) => {
+                    updateTrainingProgress(progress);
+                });
+                
+                showStatus('Brush WASM module initialized successfully', 'success');
+                document.getElementById('load-dataset-btn').disabled = false;
+                
+            } catch (error) {
+                console.error('Failed to initialize Brush WASM:', error);
+                showStatus('Failed to initialize Brush WASM: ' + error.message, 'error');
+            }
+        }
+
+        // Wait for Firebase and initialize WASM
+        window.addEventListener('firebaseReady', async () => {
+            await waitForFirebaseAndAuth();
+            await initializeBrushWasm();
+            await checkForDataset();
+        });
+
+        // Wait for Firebase and authentication
+        async function waitForFirebaseAndAuth() {
+            if (!window.firebaseServices) {
+                await new Promise(resolve => {
+                    window.addEventListener('firebaseReady', resolve, { once: true });
+                });
+            }
+
+            return new Promise((resolve) => {
+                const { onAuthStateChanged } = window.firebaseModules;
+                const auth = window.firebaseServices.auth;
+                
+                const unsubscribe = onAuthStateChanged(auth, (user) => {
+                    currentUser = user;
+                    updateAuthStatus(user);
+                    unsubscribe();
+                    resolve(user);
+                });
+            });
+        }
+
+        // Update authentication status display
+        function updateAuthStatus(user) {
+            const authStatus = document.getElementById('auth-status');
+            if (user) {
+                authStatus.textContent = `✓ ${user.email}`;
+                authStatus.style.color = '#4CAF50';
+            } else {
+                authStatus.textContent = '✗ Not authenticated';
+                authStatus.style.color = '#ff6b6b';
+            }
+        }
+
+        // Check for dataset from sessionStorage
+        async function checkForDataset() {
+            try {
+                const datasetJson = sessionStorage.getItem('colmapDataset');
+                if (datasetJson) {
+                    datasetInfo = JSON.parse(datasetJson);
+                    displayDatasetInfo();
+                    showStatus('Dataset information loaded from session', 'success');
+                } else {
+                    showStatus('No dataset found in session. Please select a processed scan from the dashboard.', 'info');
+                }
+            } catch (error) {
+                console.error('Error checking for dataset:', error);
+                showStatus('Error loading dataset information', 'error');
+            }
+        }
+
+        // Display dataset information
+        function displayDatasetInfo() {
+            if (!datasetInfo) return;
+
+            const infoDiv = document.getElementById('dataset-info');
+            infoDiv.innerHTML = `
+                <h3>COLMAP Dataset: ${datasetInfo.scan_id}</h3>
+                <p><strong>User:</strong> ${datasetInfo.user_id}</p>
+                <p><strong>Status:</strong> ${datasetInfo.status}</p>
+                <p><strong>Processing Time:</strong> ${datasetInfo.processing_time || 'Unknown'}</p>
+                <p><strong>Images:</strong> ${datasetInfo.images_count || 'Unknown'}</p>
+                <p><strong>Sparse Points:</strong> ${datasetInfo.sparse_points || 'Unknown'}</p>
+                <p><strong>Created:</strong> ${new Date(datasetInfo.created).toLocaleString()}</p>
+                <div style="margin-top: 15px;">
+                    <span style="color: #4CAF50;">✓ Ready for training</span>
+                </div>
+            `;
+        }
+
+        // Load COLMAP dataset
+        async function loadColmapDataset() {
+            if (!currentUser) {
+                showStatus('Please authenticate first', 'error');
+                return;
+            }
+
+            if (!datasetInfo) {
+                showStatus('No dataset information available', 'error');
+                return;
+            }
+
+            try {
+                showStatus('Loading COLMAP dataset...', 'info');
+                addLogEntry('info', 'Starting COLMAP dataset loading');
+                
+                document.getElementById('load-dataset-btn').disabled = true;
+                document.getElementById('load-dataset-btn').textContent = 'Loading...';
+
+                // Get Firebase Storage URL
+                const storage = window.firebaseServices.storage;
+                const storageUrl = 'https://firebasestorage.googleapis.com/v0/b/' + 
+                                  window.firebaseServices.app.options.storageBucket + '/o';
+
+                await brushTrainer.load_colmap_dataset(
+                    datasetInfo.user_id,
+                    datasetInfo.scan_id,
+                    storageUrl
+                );
+
+                addLogEntry('success', 'COLMAP dataset loaded successfully');
+                showStatus('COLMAP dataset loaded successfully', 'success');
+                
+                document.getElementById('start-training-btn').disabled = false;
+                document.getElementById('load-dataset-btn').textContent = 'Dataset Loaded';
+                
+                // Show canvas
+                document.getElementById('brush-placeholder').style.display = 'none';
+                document.getElementById('canvas-container').style.display = 'block';
+                
+            } catch (error) {
+                console.error('Error loading COLMAP dataset:', error);
+                addLogEntry('error', 'Failed to load COLMAP dataset: ' + error.message);
+                showStatus('Failed to load COLMAP dataset: ' + error.message, 'error');
+                
+                document.getElementById('load-dataset-btn').disabled = false;
+                document.getElementById('load-dataset-btn').textContent = 'Load COLMAP Dataset';
+            }
+        }
+
+        // Start training
+        async function startTraining() {
+            if (!brushTrainer || isTraining) return;
+
+            try {
+                showStatus('Starting Gaussian Splat training...', 'info');
+                addLogEntry('info', 'Initiating training process');
+                
+                isTraining = true;
+                document.getElementById('start-training-btn').disabled = true;
+                document.getElementById('stop-training-btn').disabled = false;
+                document.getElementById('progress-container').style.display = 'block';
+                document.getElementById('training-log').style.display = 'block';
+
+                await brushTrainer.start_training();
+
+                addLogEntry('success', 'Training completed successfully');
+                showStatus('Training completed successfully!', 'success');
+                
+                document.getElementById('export-btn').disabled = false;
+
+            } catch (error) {
+                console.error('Training failed:', error);
+                addLogEntry('error', 'Training failed: ' + error.message);
+                showStatus('Training failed: ' + error.message, 'error');
+            } finally {
+                isTraining = false;
+                document.getElementById('start-training-btn').disabled = false;
+                document.getElementById('stop-training-btn').disabled = true;
+            }
+        }
+
+        // Stop training
+        function stopTraining() {
+            if (brushTrainer && isTraining) {
+                brushTrainer.stop_training();
+                addLogEntry('warning', 'Training stopped by user');
+                showStatus('Training stopped', 'info');
+            }
+        }
+
+        // Export splats
+        async function exportSplats() {
+            if (!brushTrainer) return;
+
+            try {
+                showStatus('Exporting trained splats...', 'info');
+                addLogEntry('info', 'Exporting trained splats');
+                
+                const splatData = await brushTrainer.export_splats();
+                
+                // Create download
+                const blob = new Blob([splatData], { type: 'application/octet-stream' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `${datasetInfo.scan_id}_trained.ply`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                
+                addLogEntry('success', 'Splats exported successfully');
+                showStatus('Splats exported successfully', 'success');
+                
+                // Upload to Firebase Storage
+                if (currentUser && datasetInfo) {
+                    const storage = window.firebaseServices.storage;
+                    const storageUrl = 'https://firebasestorage.googleapis.com/v0/b/' + 
+                                      window.firebaseServices.app.options.storageBucket + '/o';
+                    
+                    await brushTrainer.upload_results(
+                        datasetInfo.user_id,
+                        datasetInfo.scan_id,
+                        storageUrl
+                    );
+                    
+                    addLogEntry('success', 'Results uploaded to Firebase Storage');
+                    showStatus('Results uploaded to Firebase Storage', 'success');
+                }
+                
+            } catch (error) {
+                console.error('Export failed:', error);
+                addLogEntry('error', 'Export failed: ' + error.message);
+                showStatus('Export failed: ' + error.message, 'error');
+            }
+        }
+
+        // Update training progress
+        function updateTrainingProgress(progress) {
+            const percentage = (progress.step / progress.total_steps) * 100;
+            
+            document.getElementById('progress-fill').style.width = percentage + '%';
+            document.getElementById('progress-text').textContent = 
+                `Step ${progress.step}/${progress.total_steps} (${percentage.toFixed(1)}%)`;
+            
+            document.getElementById('step-count').textContent = progress.step.toLocaleString();
+            document.getElementById('loss-value').textContent = progress.loss.toFixed(4);
+            document.getElementById('psnr-value').textContent = progress.psnr.toFixed(1);
+            document.getElementById('splat-count').textContent = progress.num_splats.toLocaleString();
+            document.getElementById('elapsed-time').textContent = progress.elapsed_time.toFixed(1) + 's';
+            document.getElementById('learning-rate').textContent = progress.lr.toFixed(6);
+            
+            // Log progress every 100 steps
+            if (progress.step % 100 === 0) {
+                addLogEntry('info', `Step ${progress.step}: Loss ${progress.loss.toFixed(4)}, PSNR ${progress.psnr.toFixed(1)}dB`);
+            }
+        }
+
+        // Add log entry
+        function addLogEntry(type, message) {
+            const logEntries = document.getElementById('log-entries');
+            const entry = document.createElement('div');
+            entry.className = `log-entry log-${type}`;
+            
+            const timestamp = new Date().toLocaleTimeString();
+            entry.innerHTML = `<span class="log-timestamp">[${timestamp}]</span>${message}`;
+            
+            logEntries.appendChild(entry);
+            logEntries.scrollTop = logEntries.scrollHeight;
+        }
+
+        // Show status
+        function showStatus(message, type = 'info') {
+            const statusDiv = document.getElementById('status');
+            statusDiv.innerHTML = `<div class="${type}">${message}</div>`;
+        }
+
+        // Download dataset
+        function downloadDataset() {
+            if (!datasetInfo) return;
+            
+            const datasetBlob = new Blob([JSON.stringify(datasetInfo, null, 2)], {
+                type: 'application/json'
+            });
+            
+            const url = URL.createObjectURL(datasetBlob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${datasetInfo.scan_id}_dataset.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        // Make functions available globally
+        window.loadColmapDataset = loadColmapDataset;
+        window.startTraining = startTraining;
+        window.stopTraining = stopTraining;
+        window.exportSplats = exportSplats;
+        window.downloadDataset = downloadDataset;
+    </script>
+</body>
+</html> 

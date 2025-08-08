@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta name="colmap-service-url" content="https://YOUR_CLOUD_RUN_SERVICE_URL">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Open3DMap - Mapping the World, Together</title>
+    <link rel="stylesheet" href="styles/main.css?v=1735161907">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div id="app">
+        <!-- Navigation Header -->
+        <nav class="navbar">
+            <div class="nav-container">
+                <div class="nav-brand">
+                    <picture>
+                        <source src="assets/open3dmap.webp" type="image/webp">
+                        <img src="assets/open3dmap.webp" alt="Open3DMap" class="logo">
+                    </picture>
+                    <span class="brand-text">Open3DMap</span>
+                </div>
+                <!-- <div class="nav-menu" id="nav-menu">
+                    <a href="#home" class="nav-link">Home</a>
+                    <a href="#explore" class="nav-link">Explore</a>
+                    <a href="#docs" class="nav-link">Docs</a>
+                    <a href="#about" class="nav-link">About</a>
+                </div> -->
+                <div class="nav-auth">
+                    <button class="btn btn-primary" id="auth-btn" data-action="show-login" style="display: none;">Sign In</button>
+                    <button class="nav-toggle" id="nav-toggle" aria-label="Toggle navigation">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                    
+                    <!-- User Navigation Dropdown (Hidden Initially) -->
+                    <div class="user-nav-dropdown" id="user-nav-dropdown" style="display: none;">
+                        <button class="user-nav-trigger" id="user-nav-trigger">
+                            <img src="" alt="Profile" class="user-nav-avatar" id="user-nav-avatar">
+                            <span class="user-nav-name" id="user-nav-name">User</span>
+                            <i class="fas fa-chevron-down user-nav-arrow"></i>
+                        </button>
+                        
+                        <div class="user-nav-menu" id="user-nav-menu">
+                            <div class="user-nav-header">
+                                <img src="" alt="Profile" class="user-nav-header-avatar" id="user-nav-header-avatar">
+                                <div class="user-nav-info">
+                                    <div class="user-nav-display-name" id="user-nav-display-name">User Name</div>
+                                    <div class="user-nav-email" id="user-nav-email">user@example.com</div>
+                                </div>
+                            </div>
+                            
+                            <div class="user-nav-divider"></div>
+                            
+                            <div class="user-nav-items">
+                                <a href="dashboard.html" class="user-nav-item">
+                                    <i class="fas fa-tachometer-alt"></i>
+                                    <span>Dashboard</span>
+                                </a>
+                                <a href="#profile" class="user-nav-item">
+                                    <i class="fas fa-user"></i>
+                                    <span>Profile Settings</span>
+                                </a>
+                                <a href="#scans" class="user-nav-item">
+                                    <i class="fas fa-camera"></i>
+                                    <span>My Scans</span>
+                                </a>
+                                <a href="#help" class="user-nav-item">
+                                    <i class="fas fa-question-circle"></i>
+                                    <span>Help & Support</span>
+                                </a>
+                            </div>
+                            
+                            <div class="user-nav-divider"></div>
+                            
+                            <button class="user-nav-signout" id="user-nav-signout">
+                                <i class="fas fa-sign-out-alt"></i>
+                                <span>Sign Out</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Mobile Navigation -->
+        <div class="nav-overlay" id="nav-overlay"></div>
+        <nav class="nav-menu-mobile" id="nav-menu-mobile">
+            <div class="nav-header">
+                <div class="nav-brand">
+                    <img src="assets/open3dmap.webp" alt="Open3DMap" class="logo">
+                    <span class="brand-text">Open3DMap</span>
+                </div>
+                <button class="nav-close" id="nav-close" aria-label="Close navigation">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="nav-links">
+                <a href="#home" class="nav-link">Home</a>
+                <a href="#explore" class="nav-link">Explore</a>
+                <a href="#docs" class="nav-link">Docs</a>
+                <a href="#about" class="nav-link">About</a>
+            </div>
+            <div class="nav-auth">
+                <button class="btn btn-primary" id="mobile-auth-btn" data-action="show-login" style="display: none;">Sign In</button>
+                <div class="user-nav-dropdown" id="mobile-user-nav" style="display: none;">
+                    <a href="dashboard.html" class="nav-link">Dashboard</a>
+                    <a href="#profile" class="nav-link">Profile</a>
+                    <button class="nav-link" id="mobile-signout">Sign Out</button>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Main Content Area -->
+        <!-- <main id="main-content">
+            <section id="home-page" class="page-section active">
+                <div class="hero-section">
+                    <div class="hero-container">
+                        <div class="hero-content">
+                            <div class="hero-text">
+                                <h1>The All-In-One<br/>3D Mapping Platform</h1>
+                                <p class="hero-subtitle">Build, share, and explore the world in three dimensions.<br/>Open source. Enterprise grade.</p>
+                                <div class="hero-actions">
+                                    
+                                    <div id="hero-actions-guest">
+                                        <button class="btn btn-primary btn-lg" data-action="show-login">Get Started for Free</button>
+                                        <button class="btn btn-secondary btn-lg">Learn More</button>
+                                    </div>
+                                    
+                                    <div id="hero-actions-user" style="display: none;">
+                                        <a href="dashboard.html" class="btn btn-primary btn-lg">
+                                            <i class="fas fa-tachometer-alt"></i>
+                                            Go to Dashboard
+                                        </a>
+                                        <button class="btn btn-secondary btn-lg">Upload New Scan</button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="hero-visual">
+                                <div class="hero-image-placeholder">
+                                    <i class="fas fa-cube"></i>
+                                    <p>3D Visualization</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                
+                <div class="features-section">
+                    <div class="container">
+                        <div class="section-header">
+                            <h2>Why Choose Open3DMap?</h2>
+                            <p>The most powerful 3D mapping platform for professionals and enthusiasts alike</p>
+                        </div>
+                        <div class="features-grid">
+                            <div class="feature-card">
+                                <div class="feature-icon">
+                                    <i class="fas fa-camera"></i>
+                                </div>
+                                <h3>Capture & Share</h3>
+                                <p>Upload your Gaussian splat scans and share them with the global community. Advanced rendering technology brings your captures to life.</p>
+                            </div>
+                            <div class="feature-card">
+                                <div class="feature-icon">
+                                    <i class="fas fa-globe"></i>
+                                </div>
+                                <h3>GPS Anchored</h3>
+                                <p>All scans are geographically anchored for real-world applications and precise mapping. Location data ensures accuracy.</p>
+                            </div>
+                            <div class="feature-card">
+                                <div class="feature-icon">
+                                    <i class="fas fa-code-branch"></i>
+                                </div>
+                                <h3>Open Source</h3>
+                                <p>Built on open standards with full data portability and community-driven development. Your data, your control.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                
+                <div class="stats-section">
+                    <div class="container">
+                        <div class="stats-grid">
+                            <div class="stat-item">
+                                <div class="stat-number">10K+</div>
+                                <div class="stat-label">Scans uploaded</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-number">50+</div>
+                                <div class="stat-label">Countries mapped</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-number">1M+</div>
+                                <div class="stat-label">Views generated</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main> -->
+
+        <!-- Loading Overlay -->
+        <div id="loading-overlay" class="loading-overlay" style="display: none;">
+            <div class="loading-spinner"></div>
+            <p>Signing you in...</p>
+        </div>
+
+        <!-- Toast Notifications -->
+        <div id="toast-container" class="toast-container"></div>
+
+        <!-- Login Modal -->
+        <div class="modal-overlay" id="login-modal">
+            <div class="modal-content login-modal">
+                <div class="modal-header">
+                    <h2>Sign In to Open3DMap</h2>
+                    <button class="modal-close" id="login-modal-close">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="login-form">
+                        <div class="auth-buttons">
+                            <button class="auth-btn google-btn" id="google-signin">
+                                <i class="fab fa-google"></i>
+                                Continue with Google
+                            </button>
+                            <button class="auth-btn github-btn" id="github-signin">
+                                <i class="fab fa-github"></i>
+                                Continue with GitHub
+                            </button>
+                            <button class="auth-btn email-btn" id="email-signin">
+                                <i class="fas fa-envelope"></i>
+                                Continue with Email
+                            </button>
+                        </div>
+
+                        <!-- Email Login Form -->
+                        <div id="email-form" class="email-form" style="display: none;">
+                            <form id="email-login-form" data-mode="login">
+                                <div class="form-group">
+                                    <label for="email-input">Email</label>
+                                    <input type="email" id="email-input" name="email" placeholder="Enter your email" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="password-input">Password</label>
+                                    <input type="password" id="password-input" name="password" placeholder="Enter your password" required>
+                                </div>
+                                <div class="error-message" style="display: none;"></div>
+                                <div class="form-actions">
+                                    <button type="submit" class="btn btn-primary">Sign In</button>
+                                    <button type="button" class="btn btn-secondary" data-action="create-account">Create Account</button>
+                                </div>
+                            </form>
+                            <a href="#" class="forgot-password">Forgot Password?</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <p>By signing in, you agree to our <a href="#terms">Terms of Service</a> and <a href="#privacy">Privacy Policy</a></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase SDK v11+ Modular -->
+    <script type="module">
+        // Import Firebase modules and make them globally available
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.8.1/firebase-app.js';
+        import { getAuth, GoogleAuthProvider, GithubAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut as firebaseSignOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/11.8.1/firebase-auth.js';
+        import { getFirestore, doc, getDoc, setDoc, updateDoc, deleteDoc, collection, query, where, orderBy, getDocs, addDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js';
+        import { getStorage, ref as storageRef, deleteObject } from 'https://www.gstatic.com/firebasejs/11.8.1/firebase-storage.js';
+        import { getAnalytics } from 'https://www.gstatic.com/firebasejs/11.8.1/firebase-analytics.js';
+
+        // Make Firebase modules available globally
+        window.firebaseModules = {
+            initializeApp, getAuth, getFirestore, getStorage, getAnalytics,
+            GoogleAuthProvider, GithubAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult,
+            signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut: firebaseSignOut, onAuthStateChanged,
+            doc, getDoc, setDoc, updateDoc, deleteDoc, collection, query, where, orderBy, getDocs, addDoc, serverTimestamp,
+            storageRef, deleteObject
+        };
+
+        // Import Firebase configuration
+        const { firebaseConfig } = await import('./js/firebase-config.js');
+
+        try {
+            const app = initializeApp(firebaseConfig);
+            window.firebaseServices = {
+                app,
+                auth: getAuth(app),
+                firestore: getFirestore(app),
+                storage: getStorage(app),
+                analytics: getAnalytics(app)
+            };
+            console.log('✅ Firebase v11 initialized successfully');
+            
+            // Dispatch event to signal Firebase is ready
+            window.dispatchEvent(new CustomEvent('firebaseReady'));
+            
+        } catch (error) {
+            console.error('❌ Firebase initialization error:', error);
+            window.firebaseServices = null;
+        }
+    </script>
+    
+    <!-- App Scripts -->
+    <script src="js/auth.js"></script>
+    <script src="js/main.js" defer></script>
+</body>
+</html> 

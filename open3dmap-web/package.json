@@ -1,0 +1,33 @@
+{
+  "name": "open3dmap-web",
+  "version": "1.0.0",
+  "description": "Open3DMap Web Application - 3D Reconstruction and Gaussian Splatting",
+  "type": "module",
+  "main": "index.html",
+  "scripts": {
+    "dev": "node server.js",
+    "start": "node server.js",
+    "build": "node build-config.js",
+    "serve": "npx serve -s . -p 3000",
+    "test": "echo \"No tests specified\" && exit 0"
+  },
+  "keywords": [
+    "3d-reconstruction",
+    "gaussian-splatting",
+    "colmap",
+    "webgl",
+    "threejs",
+    "firebase"
+  ],
+  "author": "Open3DMap",
+  "license": "MIT",
+  "devDependencies": {
+    "serve": "^14.2.4"
+  },
+  "dependencies": {
+    "node-fetch": "^3.3.2"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  }
+}

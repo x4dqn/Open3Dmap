@@ -1,0 +1,30 @@
+# Node
+node_modules/
+npm-debug.log*
+yarn-error.log*
+
+# Build
+dist/
+build/
+.parcel-cache/
+.next/
+.vercel/
+
+# Env & credentials
+.env
+.env.*
+*.env
+*.local
+*.secret
+*credentials*.json
+client_secret*.json
+serviceAccount*.json
+
+# Logs
+*.log
+pglite-debug.log
+
+# OS
+.DS_Store
+Thumbs.db
+

@@ -1,0 +1,49 @@
+{
+  "name": "functions",
+  "description": "Cloud Functions for Firebase - COLMAP 3D Reconstruction Processing",
+  "type": "module",
+  "scripts": {
+    "lint": "eslint .",
+    "serve": "firebase emulators:start --only functions",
+    "shell": "firebase functions:shell",
+    "start": "npm run shell",
+    "deploy": "firebase deploy --only functions",
+    "logs": "firebase functions:log",
+    "build": "npm run lint",
+    "test": "npm run lint"
+  },
+  "engines": {
+    "node": "22"
+  },
+  "main": "index.js",
+  "dependencies": {
+    "@google-cloud/storage": "^7.12.1",
+    "cors": "^2.8.5",
+    "firebase-admin": "^12.7.0",
+    "firebase-functions": "^6.3.2",
+    "node-fetch": "^3.3.2",
+    "@google-cloud/functions-framework": "^3.4.0",
+    "express": "^4.18.2"
+  },
+  "devDependencies": {
+    "eslint": "^9.0.0",
+    "@eslint/js": "^9.0.0",
+    "globals": "^15.0.0"
+  },
+  "overrides": {
+    "inflight": "npm:@isaacs/inflight@^1.0.6",
+    "rimraf": "^5.0.0",
+    "glob": "^10.0.0"
+  },
+  "private": true,
+  "keywords": [
+    "firebase",
+    "functions",
+    "colmap",
+    "3d-reconstruction",
+    "computer-vision",
+    "photogrammetry"
+  ],
+  "author": "Open3DMap",
+  "license": "MIT"
+}
