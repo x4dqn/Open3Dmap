@@ -1,42 +1,42 @@
 <p align="center">
-  <img src="assets/open3dmap.png" alt="Open3DMap Logo" width="300"/>
+  <img src="open3dmap-web/assets/open3dmap.png" alt="Open3DMap Logo" width="300"/>
 </p>
 <p align="center">
 Open3DMap - Mapping the World, Together
 </p>
+
 # Open3DMap
 
 [![Open3D Scanner](https://img.shields.io/badge/Platform-Android-green.svg)](https://developer.android.com)
 [![Firebase](https://img.shields.io/badge/Backend-Firebase-orange.svg)](https://firebase.google.com)
 [![ARCore](https://img.shields.io/badge/AR-ARCore-blue.svg)](https://developers.google.com/ar)
 
-**Open3DMap** is a community-driven initiative to build an open, GPS-anchored 3D mapping infrastructure for spatial computing. Our mission is to let anyone with a smartphone capture, share, and reuse high-fidelity 3D scans (Gaussian Splats) of the physical world—streets, parks, buildings, public spaces—without relying on closed platforms or proprietary ecosystems.
+Open3DMap is a community-driven initiative to build an open, GPS-anchored 3D mapping infrastructure for spatial computing. Our mission is to let anyone with a smartphone and a browser capture, process, train, share, and reuse high-fidelity 3D scans (Gaussian Splats) of the physical world—streets, parks, buildings, public spaces—without relying on closed platforms or proprietary ecosystems.
 
-Every scan becomes part of a living digital twin: anchored with transparent metadata using our open [SplatJSON format](docs/splatjson-spec.md), freely exportable, and interoperable with tools like Unity, WebXR, and Cesium. From education and research to public art and civic planning, Open3DMap is designed to support open participation, long-term accessibility, and real-world utility.
+Every scan becomes part of a living digital twin: anchored with transparent metadata using our open SplatJSON format, freely exportable, and interoperable with tools like Unity, WebXR, and Cesium. From education and research to public art and civic planning, Open3DMap is designed to support open participation, long-term accessibility, and real-world utility.
 
 We believe spatial computing should be public infrastructure. Open3DMap is how we build it—together.
 
 ## Project Status
 
-This repository contains the **mobile capture application** and **open data standards** that form the foundation of the Open3DMap ecosystem. The Android app captures spatial data for 3D reconstruction, automatically generating metadata in our open [SplatJSON format](docs/splatjson-spec.md) for maximum interoperability. It records image sequences, ARCore camera poses, GPS coordinates, and IMU sensor data designed to feed into downstream Gaussian splatting pipelines for fast, high-quality 3D reconstruction and global alignment.
+This repository now includes the web portal and cloud processing we built:
 
-While the current focus is on mobile capture and open standards development, this repository will eventually house the full Open3DMap codebase, including reconstruction tools, cloud pipelines, and web-based visualization.
+- Web dashboard for scan management, conversion, and training
+- COLMAP cloud pipeline via Firebase Functions with real-time streaming progress and health checks
+- In-browser training powered by WebAssembly (Brush) and WebGPU
+- Export and upload of trained Gaussian Splat results to cloud storage
 
-We're releasing this early-stage mobile app to kickstart development, invite collaborators, and begin testing participatory mobile scanning in real-world conditions.
+We are continuing to support mobile capture and open standards alongside the web platform.
 
 ## Platform Roadmap
 
-**Legend:**
-
-✅ = Available now, 🔄 = In active development, (unmarked) = Planned for future
+Legend: ✅ = Available now, 🔄 = In active development, (unmarked) = Planned for future
 
 ### Core Platform Components
-The full Open3DMap platform will eventually include:
 
 **1. Mobile Capture App**
 - ✅ Real-time camera tracking using ARCore
-- ✅ GPS location tracking for outdoor scans  
-- ✅ Offline-first capture with INRIA export
+- ✅ GPS location tracking for outdoor scans
 - 🔄 Open SplatJSON metadata export for every scan (in development)
 - Integrated Gaussian splat rendering and real-time feedback
 - Manual scan upload and contributor login flow
@@ -47,19 +47,21 @@ The full Open3DMap platform will eventually include:
 
 **2. Cloud Processing & Metadata**
 - ✅ User authentication and login system
-- 🔄 Web-based scan upload and management (in development)
-- A fast, mobile-optimized reconstruction pipeline using 3D Gaussian splatting, built for ease of use, contributor feedback, and civic-scale mapping
-- Scan quality validation (coverage, density, drift)
+- ✅ Web-based scan upload and management
+- ✅ Reconstruction pipeline using COLMAP in Firebase Functions (16GiB RAM, 4 CPU, 60m timeout)
+- ✅ Parallel image downloads with retries; stage-by-stage streaming logs
+- ✅ Health check endpoint verifying COLMAP and dependencies
 - Automatic SplatJSON generation with GPS anchoring and composability metadata
 - Scene composability: support for merging overlapping scans into larger environments
 - Privacy filtering (PII blurring, licensing tags)
-- Incremental scan integration: enable contributors to extend, update, and refine existing scans collaboratively
+- Incremental scan integration to extend and refine existing scans collaboratively
 
 **3. Web Portal and Dashboard**
-- ✅ Basic scan viewer and  management interface
-- ✅ Contributor dashboards
+- ✅ Dashboard with scan cards and contributor views
+- ✅ Training modal integrated directly in `dashboard.html`
+- ✅ “Convert with COLMAP” then “Train with Brush” workflow
+- ✅ Real-time progress updates and final export (PLY)
 - Map-based scan viewer and explorer
-- Advanced contributor dashboards and scan management
 - Export options: .splat, .splatjson, .glb, .ply, .usdz, .obj
 - Contributor-defined license controls (e.g., CC-BY, CC0)
 - Spatial querying, filtering, and version history
@@ -67,8 +69,8 @@ The full Open3DMap platform will eventually include:
 **4. Open Standards and Developer Access**
 - Public API for scan retrieval, query, and integration
 - SDKs for Unity, WebXR, Cesium
-- ✅ [SplatJSON specification](docs/splatjson-spec.md): standardized, georeferenced scan metadata
-- GeoPose and OGC-aligned anchoring support  for global interoperability
+- ✅ SplatJSON specification (standardized, georeferenced scan metadata)
+- GeoPose and OGC-aligned anchoring support for global interoperability
 
 ### Participatory Infrastructure Roadmap
 
@@ -95,42 +97,77 @@ The full Open3DMap platform will eventually include:
 - Change detection tooling (construction, decay, updates)
 - Scheduled re-scan requests and community-driven update tasks
 - Incremental scanning support to grow scenes over time while maintaining spatial consistency
-<!--
 
-**9. Long-Term AI Infrastructure**
-- Tools for training spatial-AI models on splats
-- Semantic tagging and scene segmentation
-- Open datasets for accessibility, robotics, and urban research
--->
+At this stage, the repository includes the web portal for upload, conversion, and training, along with the cloud COLMAP pipeline and in-browser training. Mobile capture and standards continue to evolve in parallel.
 
-At this stage, the repository includes the Android app for data capture, an outline of our website, and the open SplatJSON specification with examples. Future components will be added incrementally as they are developed and tested.
+## Web Portal (Local Dev)
 
+Prerequisites
+
+- Node.js 18+ (20+ recommended)
+- Chrome 113+ with WebGPU/hardware acceleration enabled
+- Rust + `wasm-pack` if you want to rebuild Brush WASM (prebuilt artifacts included)
+
+Development
+
+```bash
+# From repo root
+cd open3dmap-web
+npm install
+
+# Build Brush WASM (optional if using prebuilt)
+node build-brush-wasm.js
+
+# Start local server
+node start-dev.js
+```
+
+Open:
+
+- App: `http://localhost:3000/`
+- Dashboard: `http://localhost:3000/dashboard.html`
+- Brush Trainer: `http://localhost:3000/brush-trainer.html`
+
+Notes:
+
+- If `js/firebase-config.js` is missing, the dev script will generate it via `build-config.js`.
+- Prebuilt WASM artifacts are included: `brush_wasm.js`, `brush_wasm_bg.wasm` (and `brush-wasm/pkg/`).
+
+## Browser Training (Brush WASM)
+
+Training runs directly in the browser using WebGPU and a WebAssembly module (Brush).
+
+Workflow
+
+1. Go to `dashboard.html` and select a scan
+2. Click the magic wand (🪄) to open the training modal
+3. If COLMAP results are missing, use “Convert with COLMAP” first
+4. Start “Train with Brush” and watch live progress
+5. Download/export the trained PLY; results are uploaded to cloud storage
+
+## Cloud COLMAP Pipeline
+
+- Callable function `processCOLMAP` executes: download → feature extraction → matching → sparse reconstruction → upload
+- Enhanced parameters improve image registration rates across datasets
+- Parallel downloads with retries; structured logging with timestamps
+- Health check function validates COLMAP, cmake, python3, gcc
 
 ## Coming Soon: Contributor Login and Cloud Pipeline
 
-We are actively building out cloud integration to support a seamless contributor workflow. This will enable users to:
+We are actively building out contributor workflows across web and mobile to:
 
 - Log in via email-based authentication (mobile-first)
-- Capture scans using the Open3DMap Android app
 - Upload scans automatically to the cloud
-- View and manage their uploaded scans on the web, including metadata, filtering, and map-based visualization
+- View and manage uploaded scans on the web
+- Generate and maintain standardized SplatJSON metadata for integration
 
-As part of this pipeline, each scan will be automatically paired with a structured .splatjson metadata file. This file contains GPS coordinates, orientation, device and capture metadata, file URLs, and licensing information—enabling integration with maps, viewers, and third-party spatial tools.
-
-We are also enhancing the mobile app to support more complete metadata capture, backend integration, and foundational features such as contributor identity, scan validation, and sync status tracking.
-
-These features lay the groundwork for a seamless end-to-end contributor experience—from capture to upload to public sharing. While the full platform is still in development, the Open3DMap Android app already enables high-quality, offline-first spatial data collection.
-
-The section below describes what the app can do **today**, and how you can start capturing scans immediately.
-
+These features lay the groundwork for a seamless end-to-end contributor experience—from capture to upload to public sharing.
 
 ## Mobile App for Data Capture
 
-The Open3DMap Android app is the foundation of our ecosystem. It allows anyone to capture georeferenced image sequences and sensor data that power downstream reconstruction, anchoring, and sharing. Whether you're contributing to public spatial datasets or exploring your environment in 3D, this tool is where it all begins.
+The Open3DMap Android app allows capturing georeferenced image sequences and sensor data for downstream reconstruction, anchoring, and sharing.
 
-The sections below refer specifically to the mobile capture tool. If you're looking to test early scanning workflows or contribute to real-world spatial data collection, you're in the right place.
-
-## Features
+### Features
 
 - Real-time camera tracking using ARCore
 - Automatic frame capture with quality assessment
@@ -140,7 +177,7 @@ The sections below refer specifically to the mobile capture tool. If you're look
 - Scan management (rename, delete, export)
 - Quality metrics for optimal capture
 
-## Prerequisites
+### Prerequisites
 
 - Android device with ARCore support
 - Android 8.0 (API level 26) or higher
@@ -148,16 +185,19 @@ The sections below refer specifically to the mobile capture tool. If you're look
 - Camera and location permissions
 - Storage permissions for exporting data
 
-## Installation
+### Installation
 
-### Option 1: Download APK (Recommended)
+Option 1: Download APK (Recommended)
+
 1. Download the latest APK: [Open3DMap APK](https://github.com/x4dqn/Open3Dmap/blob/main/Open3DMap%20-%20Scanner.apk)
 2. Enable "Install from unknown sources" in your Android settings
 3. Install the downloaded APK
 4. Launch the app and grant necessary permissions
 
-### Option 2: Build from Source
+Option 2: Build from Source
+
 1. Clone the repository:
+
 ```bash
 git clone https://github.com/x4dqn/Open3DMap.git
 cd Open3DMap
@@ -175,7 +215,7 @@ cd Open3DMap
    - Click the "Run" button (green play icon)
    - Wait for the app to install and launch
 
-## Usage
+## Usage (Mobile)
 
 ### Capturing Scans
 
@@ -187,11 +227,9 @@ cd Open3DMap
    - Maintain good lighting conditions
    - Move at a walking pace
    - Avoid rapid movements or rotations
-5. Press "Stop Scan" when finished
+4. Press "Stop Scan" when finished
 
 ### Export File Structure
-
-The app exports data in a format compatible with the INRIA Gaussian Splatting pipeline:
 
 ```
 Open3DMaps/Exports/
@@ -206,11 +244,12 @@ Open3DMaps/Exports/
         └── scan_id.splatjson
 ```
 
-## Using with INRIA Gaussian Splatting
+## Using with INRIA Gaussian Splatting (Optional)
 
 1. Export your scan from the app
 2. Copy the exported folder to your computer
 3. Follow the INRIA pipeline setup:
+
 ```bash
 # Clone the INRIA repository
 git clone https://github.com/graphdeco-inria/gaussian-splatting.git
@@ -225,39 +264,25 @@ python train.py --source_path /path/to/your/scan
 
 ### Accessing the Viewer
 
-The INRIA pipeline includes a built-in viewer for visualizing the results:
+After training, locate the output directory (usually `output/[timestamp]`), then launch the viewer:
 
-1. After training, locate the output directory (usually `output/[timestamp]`)
-2. Launch the viewer:
 ```bash
 python viewer.py --path /path/to/output/directory
 ```
 
-The viewer supports:
-- Interactive camera controls
-- Point cloud visualization
-- Splat rendering
-- Quality metrics display
+The viewer supports interactive camera controls, splat rendering, and quality metrics display.
 
 ## Troubleshooting
 
-### Common Issues
+### Web
+- WebGPU not available: Use latest Chrome and enable hardware acceleration; check `chrome://gpu`
+- WASM load errors: rebuild with `node build-brush-wasm.js` and restart the server
+- Mock COLMAP outputs: deploy Functions with Docker to include real COLMAP binaries
 
-1. **Poor Tracking**
-   - Ensure good lighting conditions
-   - Move more slowly
-   - Point the camera at textured surfaces
-   - Avoid reflective or transparent surfaces
-
-2. **Export Failures**
-   - Check storage permissions
-   - Ensure sufficient storage space
-   - Try restarting the app
-
-3. **ARCore Issues**
-   - Update Google Play Services
-   - Clear ARCore app data
-   - Restart device
+### Mobile
+- Poor tracking: ensure good lighting, move slowly, focus on textured surfaces, avoid reflective/transparent surfaces
+- Export failures: check storage permissions and free space; restart the app
+- ARCore issues: update Google Play Services; clear ARCore app data; restart device
 
 ## Contributing
 
@@ -272,3 +297,5 @@ This project is licensed under CC BY-NC 4.0 - see the LICENSE file for details.
 - ARCore team for the excellent tracking capabilities
 - INRIA team for their work on [3D Gaussian Splatting](https://repo-sam.inria.fr/fungraph/3d-gaussian-splatting/)
 - All contributors and users of the project
+
+

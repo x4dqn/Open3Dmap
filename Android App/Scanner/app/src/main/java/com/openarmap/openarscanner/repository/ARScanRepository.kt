@@ -1,6 +1,9 @@
 package com.openarmap.openarscanner.repository
 
 import android.util.Log
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import java.io.ByteArrayOutputStream
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ktx.firestore
@@ -13,6 +16,8 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.sync.Semaphore
+import kotlinx.coroutines.sync.withPermit
 import java.util.Date
 import java.util.UUID
 
@@ -99,6 +104,13 @@ class ARScanRepository {
         Log.d(TAG, "Storage app name: ${storage.app.name}")
     }
 
+    data class UploadConfig(
+        val maxConcurrentUploads: Int = 6,
+        val targetJpegQuality: Int = 92,
+        val minJpegQuality: Int = 80,
+        val maxBytesPerFile: Int = 15 * 1024 * 1024
+    )
+
     /**
      * Saves AR scan data with associated images using direct uploads with progress tracking.
      * 
@@ -121,7 +133,8 @@ class ARScanRepository {
     suspend fun saveScanWithProgress(
         scanData: ARScanData, 
         photos: List<ByteArray>,
-        progressCallback: (current: Int, total: Int) -> Unit
+        progressCallback: (current: Int, total: Int) -> Unit,
+        config: UploadConfig = UploadConfig()
     ): Result<ARScanData> = withContext(Dispatchers.IO) {
         try {
             Log.d(TAG, "Starting to save scan with progress tracking - ${photos.size} photos")
@@ -168,53 +181,62 @@ class ARScanRepository {
             
             // Step 1: Upload photos with progress tracking
             Log.d(TAG, "Step 1: Uploading photos to storage with progress tracking...")
-            val photoUrls = mutableListOf<String>()
-            
-            photos.forEachIndexed { index, photo ->
-                try {
-                    val scanId = updatedScanData.id.ifEmpty { UUID.randomUUID().toString() }
-                    val photoId = UUID.randomUUID().toString()
-                    val fileName = "scan_${scanId}_photo_${index}_${photoId}.jpg"
-                    
-                    // Create user-organized storage reference: ar_scans/{userId}/{scanId}/{fileName}
-                    val photoRef = storage.reference
-                        .child("ar_scans")
-                        .child(updatedScanData.userId)  // User-specific folder
-                        .child(scanId)           // Scan-specific folder
-                        .child(fileName)         // Unique filename
-                    
-                    Log.d(TAG, "Uploading photo $index to: ${photoRef.path}")
-                    Log.d(TAG, "User-organized path: ar_scans/${updatedScanData.userId}/${scanId}/${fileName}")
-                    Log.d(TAG, "Storage reference bucket: ${photoRef.bucket}")
-                    Log.d(TAG, "Photo size: ${photo.size} bytes")
-                    
-                    // Upload the photo bytes to Firebase Storage
-                    val uploadTask = photoRef.putBytes(photo).await()
-                    Log.d(TAG, "Photo $index uploaded successfully, bytes transferred: ${uploadTask.bytesTransferred}")
-                    
-                    // DEBUGGING: Add small delay to ensure file is fully propagated before getting download URL
-                    kotlinx.coroutines.delay(100) // 100ms delay
-                    
-                    // Get the download URL for the uploaded photo
-                    Log.d(TAG, "Attempting to get download URL for photo $index...")
-                    val downloadUrl = photoRef.downloadUrl.await().toString()
-                    Log.d(TAG, "Photo $index download URL obtained successfully: $downloadUrl")
-                    
-                    photoUrls.add(downloadUrl)
-                    
-                    // Update progress
-                    progressCallback(index + 1, photos.size)
-                    
-                } catch (e: Exception) {
-                    Log.e(TAG, "Error uploading photo $index", e)
-                    Log.e(TAG, "Error details - Message: ${e.message}")
-                    Log.e(TAG, "Error details - Cause: ${e.cause}")
-                    if (e is com.google.firebase.storage.StorageException) {
-                        Log.e(TAG, "Storage error code: ${e.errorCode}")
-                        Log.e(TAG, "Storage HTTP result: ${e.httpResultCode}")
+            // Use bounded parallelism for faster uploads without overwhelming the device/network
+            val semaphore = Semaphore(config.maxConcurrentUploads)
+            val totalPhotos = photos.size
+            val scanId = updatedScanData.id.ifEmpty { UUID.randomUUID().toString() }
+            val progressCounter = java.util.concurrent.atomic.AtomicInteger(0)
+            val photoUrls = MutableList(totalPhotos) { "" }
+
+            kotlinx.coroutines.coroutineScope {
+                photos.mapIndexed { index, photo ->
+                    async(Dispatchers.IO) {
+                        semaphore.withPermit {
+                            try {
+                                val preparedBytes = ensureUnderMaxBytes(
+                                    original = photo,
+                                    maxBytes = config.maxBytesPerFile,
+                                    targetQuality = config.targetJpegQuality,
+                                    minQuality = config.minJpegQuality
+                                )
+                                val photoId = UUID.randomUUID().toString()
+                                val fileName = "scan_${scanId}_photo_${index}_${photoId}.jpg"
+
+                                val photoRef = storage.reference
+                                    .child("ar_scans")
+                                    .child(updatedScanData.userId)
+                                    .child(scanId)
+                                    .child(fileName)
+
+                                Log.d(TAG, "Uploading photo $index to: ${photoRef.path}")
+                                Log.d(TAG, "User-organized path: ar_scans/${updatedScanData.userId}/${scanId}/${fileName}")
+                                Log.d(TAG, "Storage reference bucket: ${photoRef.bucket}")
+                                Log.d(TAG, "Photo size (pre-upload): ${preparedBytes.size} bytes")
+
+                                val uploadTask = photoRef.putBytes(preparedBytes).await()
+                                Log.d(TAG, "Photo $index uploaded successfully, bytes transferred: ${uploadTask.bytesTransferred}")
+
+                                // Small delay to avoid immediate metadata fetch race in some networks
+                                kotlinx.coroutines.delay(50)
+
+                                val downloadUrl = photoRef.downloadUrl.await().toString()
+                                Log.d(TAG, "Photo $index download URL obtained successfully")
+
+                                photoUrls[index] = downloadUrl
+
+                                val current = progressCounter.incrementAndGet()
+                                progressCallback(current, totalPhotos)
+                            } catch (e: Exception) {
+                                Log.e(TAG, "Error uploading photo $index", e)
+                                if (e is com.google.firebase.storage.StorageException) {
+                                    Log.e(TAG, "Storage error code: ${e.errorCode}")
+                                    Log.e(TAG, "Storage HTTP result: ${e.httpResultCode}")
+                                }
+                                throw e
+                            }
+                        }
                     }
-                    throw e
-                }
+                }.awaitAll()
             }
 
             Log.d(TAG, "Step 1 completed: All photos uploaded successfully")
@@ -605,5 +627,60 @@ class ARScanRepository {
             Log.w(TAG, "Failed to extract storage path from URL: $downloadUrl", e)
             null
         }
+    }
+
+    private fun ensureUnderMaxBytes(
+        original: ByteArray,
+        maxBytes: Int,
+        targetQuality: Int,
+        minQuality: Int
+    ): ByteArray {
+        if (original.size <= maxBytes) return original
+
+        // First try quality-only reduction without resizing
+        var quality = targetQuality
+        var currentBytes = recompress(original, quality)
+        while (currentBytes.size > maxBytes && quality > minQuality) {
+            quality -= 4
+            currentBytes = recompress(original, quality)
+        }
+        if (currentBytes.size <= maxBytes) return currentBytes
+
+        // Need to downscale. Decode with sampling and iteratively increase sampling.
+        val boundsOptions = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+        BitmapFactory.decodeByteArray(original, 0, original.size, boundsOptions)
+        var inSampleSize = 2
+
+        while (true) {
+            val decodeOptions = BitmapFactory.Options().apply { this.inSampleSize = inSampleSize }
+            val bitmap = BitmapFactory.decodeByteArray(original, 0, original.size, decodeOptions)
+                ?: return currentBytes // fallback to best we have
+            try {
+                quality = targetQuality
+                var out = toJpeg(bitmap, quality)
+                while (out.size > maxBytes && quality > minQuality) {
+                    quality -= 4
+                    out = toJpeg(bitmap, quality)
+                }
+                if (out.size <= maxBytes) return out
+            } finally {
+                bitmap.recycle()
+            }
+            // Increase downscale factor and try again, cap to prevent infinite loop
+            if (inSampleSize >= 16) return currentBytes
+            inSampleSize *= 2
+        }
+    }
+
+    private fun recompress(sourceJpeg: ByteArray, quality: Int): ByteArray {
+        val bitmap = BitmapFactory.decodeByteArray(sourceJpeg, 0, sourceJpeg.size)
+            ?: return sourceJpeg
+        return try { toJpeg(bitmap, quality) } finally { bitmap.recycle() }
+    }
+
+    private fun toJpeg(bitmap: Bitmap, quality: Int): ByteArray {
+        val baos = ByteArrayOutputStream()
+        bitmap.compress(Bitmap.CompressFormat.JPEG, quality.coerceIn(50, 100), baos)
+        return baos.toByteArray()
     }
 } 

@@ -15,6 +15,41 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
+    <!-- Upload Progress Overlay -->
+    <LinearLayout
+        android:id="@+id/uploadProgressContainer"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="12dp"
+        android:background="#CC000000"
+        android:visibility="gone"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/scanControlBar">
+
+        <TextView
+            android:id="@+id/uploadProgressText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Uploading 0/0 photos"
+            android:textColor="@android:color/white"
+            android:textStyle="bold"
+            android:textSize="16sp"
+            android:layout_marginBottom="8dp" />
+
+        <ProgressBar
+            android:id="@+id/uploadProgressBar"
+            style="@android:style/Widget.DeviceDefault.Light.ProgressBar.Horizontal"
+            android:layout_width="match_parent"
+            android:layout_height="8dp"
+            android:indeterminate="false"
+            android:max="100"
+            android:progress="0"
+            android:progressTint="@color/purple_500"
+            android:backgroundTint="@android:color/darker_gray" />
+    </LinearLayout>
+
     <!-- Scan Control Bar -->
     <LinearLayout
         android:id="@+id/scanControlBar"
@@ -202,6 +237,7 @@
 
     </androidx.cardview.widget.CardView>
 
+    <!-- Legacy center spinner (kept for internal operations) -->
     <ProgressBar
         android:id="@+id/progressBar"
         android:layout_width="wrap_content"

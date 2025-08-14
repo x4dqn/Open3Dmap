@@ -1,33 +1,84 @@
 rules_version = '2';
 
-// Firebase Storage Security Rules for Open3DMap Scanner
-// PRODUCTION RULES - Secure user-specific access
 service firebase.storage {
   match /b/{bucket}/o {
-    
-    // AR SCAN DATA - Users can only access their own scan data
-    match /ar_scans/{userId}/{allPaths=**} {
-      allow read, write: if request.auth != null 
-                        && request.auth.uid == userId
-                        && request.resource.size < 10 * 1024 * 1024;
+    // Allow authenticated users to read/write their own scan data
+    match /scans/{userId}/{scanId}/{allPaths=**} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
     }
     
-    // TEST UPLOADS - Users can manage their own test files
-    match /test_uploads/{userId}/{allPaths=**} {
-      allow read, write: if request.auth != null 
-                        && request.auth.uid == userId;
+    // Allow authenticated users to list their own scan folders
+    match /scans/{userId} {
+      allow read: if request.auth != null && request.auth.uid == userId;
     }
     
-    // CONNECTIVITY TESTS - Allow authenticated users to test connectivity
+    // Allow authenticated users to read/write their own COLMAP results
+    match /colmap-results/{userId}/{scanId}/{allPaths=**} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+    
+    // Allow authenticated users to list their own COLMAP result folders
+    match /colmap-results/{userId} {
+      allow read: if request.auth != null && request.auth.uid == userId;
+    }
+    
+    // Allow authenticated users to read/write their own trained splats
+    match /trained-splats/{userId}/{allPaths=**} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+    
+    // Allow authenticated users to list their own trained splat folders
+    match /trained-splats/{userId} {
+      allow read: if request.auth != null && request.auth.uid == userId;
+    }
+    
+    // Allow authenticated users to read/write their own profile data
+    match /users/{userId}/{allPaths=**} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+    
+    // Allow authenticated users to list their own user data folders
+    match /users/{userId} {
+      allow read: if request.auth != null && request.auth.uid == userId;
+    }
+    
+    // Also allow alternative path structures that might be used by the mobile app
+    match /ar_scans/{userId}/{scanId}/{allPaths=**} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+    
+    match /ar_scans/{userId} {
+      allow read: if request.auth != null && request.auth.uid == userId;
+    }
+    
+    match /user_scans/{userId}/{scanId}/{allPaths=**} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+    
+    match /user_scans/{userId} {
+      allow read: if request.auth != null && request.auth.uid == userId;
+    }
+    
+    match /images/{userId}/{scanId}/{allPaths=**} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+    
+    match /images/{userId} {
+      allow read: if request.auth != null && request.auth.uid == userId;
+    }
+    
+    // User folder first structure
+    match /{userId}/scans/{scanId}/{allPaths=**} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+    
+    match /{userId}/scans {
+      allow read: if request.auth != null && request.auth.uid == userId;
+    }
+    
+    // Deny all other access
     match /{allPaths=**} {
-      allow read, write: if request.auth != null 
-                        && resource.name.matches('connectivity_test_.*');
-    }
-    
-    // PUBLIC DATA - Read-only for everyone, write for authenticated users
-    match /public/{allPaths=**} {
-      allow read: if true;
-      allow write: if request.auth != null;
+      allow read, write: if false;
     }
   }
 }

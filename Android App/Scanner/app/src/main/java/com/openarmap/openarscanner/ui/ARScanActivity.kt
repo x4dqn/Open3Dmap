@@ -44,6 +44,10 @@ import androidx.lifecycle.repeatOnLifecycle
 import com.google.firebase.storage.FirebaseStorage
 import kotlinx.coroutines.tasks.await
 import kotlin.math.sqrt
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
+import android.widget.ProgressBar
+import android.widget.TextView
 
 class ARScanActivity : AppCompatActivity() {
     private lateinit var binding: ActivityArScanBinding
@@ -72,6 +76,9 @@ class ARScanActivity : AppCompatActivity() {
         private const val LOCATION_UPDATE_INTERVAL = 1000L // 1 second
         private const val QUALITY_THRESHOLD = 65.0 // Minimum quality score (0-100) to accept frame (mobile-optimized)
         private const val MAX_FRAMES_TO_UPLOAD = 2000 // Maximum number of frames to upload per scan
+        // Image quality controls
+        private const val INTERMEDIATE_JPEG_QUALITY = 100 // minimize loss when converting YUV → JPEG for decode
+        private const val FINAL_JPEG_QUALITY = 92        // final upload JPEG quality
         private val REQUIRED_PERMISSIONS = arrayOf(
             Manifest.permission.CAMERA,
             Manifest.permission.ACCESS_FINE_LOCATION,
@@ -128,34 +135,33 @@ class ARScanActivity : AppCompatActivity() {
                     when (progress) {
                         is com.openarmap.openarscanner.viewmodel.ARScanViewModel.UploadProgress.Uploading -> {
                             runOnUiThread {
-                                val message = "Direct Upload: ${progress.current}/${progress.total} photos"
-                                Toast.makeText(this@ARScanActivity, message, Toast.LENGTH_SHORT).show()
-                                Log.d(TAG, "Direct upload progress: ${progress.scanId} - ${progress.current}/${progress.total}")
-                                
-                                // Update UI to show progress
+                                // Show overlay and update progress UI
+                                binding.uploadProgressContainer.visibility = View.VISIBLE
+                                val textView = findViewById<TextView>(R.id.uploadProgressText)
+                                val bar = findViewById<ProgressBar>(R.id.uploadProgressBar)
+                                val pct = if (progress.total > 0) (progress.current * 100 / progress.total) else 0
+                                textView.text = "Uploading ${progress.current}/${progress.total} photos"
+                                bar.progress = pct
                                 updateUploadProgressUI(progress.current, progress.total)
                             }
                         }
                         is com.openarmap.openarscanner.viewmodel.ARScanViewModel.UploadProgress.Success -> {
                             runOnUiThread {
-                                Toast.makeText(this@ARScanActivity, "Upload completed! ${progress.photoCount} photos uploaded", Toast.LENGTH_LONG).show()
-                                Log.d(TAG, "Direct upload completed: ${progress.scanId} with ${progress.photoCount} photos")
-                                
-                                // Hide progress UI
+                                // Hide overlay on success
+                                binding.uploadProgressContainer.visibility = View.GONE
                                 hideUploadProgressUI()
                             }
                         }
                         is com.openarmap.openarscanner.viewmodel.ARScanViewModel.UploadProgress.Failed -> {
                             runOnUiThread {
-                                Toast.makeText(this@ARScanActivity, "Upload failed: ${progress.error}", Toast.LENGTH_LONG).show()
-                                Log.e(TAG, "Direct upload failed: ${progress.scanId} - ${progress.error}")
-                                
-                                // Hide progress UI
+                                // Hide overlay on failure
+                                binding.uploadProgressContainer.visibility = View.GONE
                                 hideUploadProgressUI()
                             }
                         }
                         is com.openarmap.openarscanner.viewmodel.ARScanViewModel.UploadProgress.Idle -> {
-                            // No action needed for idle state
+                            // Hide overlay when idle
+                            binding.uploadProgressContainer.visibility = View.GONE
                             hideUploadProgressUI()
                         }
                     }
@@ -168,8 +174,7 @@ class ARScanActivity : AppCompatActivity() {
      * Updates the UI to show upload progress
      */
     private fun updateUploadProgressUI(current: Int, total: Int) {
-        // You can add a progress bar or other UI elements here
-        // For now, we'll just log the progress
+        // Optional: keep any additional logging or UI here
         Log.d(TAG, "Upload progress: $current/$total")
     }
     
@@ -177,7 +182,6 @@ class ARScanActivity : AppCompatActivity() {
      * Hides the upload progress UI
      */
     private fun hideUploadProgressUI() {
-        // Hide any progress indicators
         Log.d(TAG, "Upload progress UI hidden")
     }
     
@@ -722,7 +726,8 @@ class ARScanActivity : AppCompatActivity() {
 
                 val yuvImage = YuvImage(nv21, ImageFormat.NV21, width, height, null)
                 val out = ByteArrayOutputStream()
-                yuvImage.compressToJpeg(android.graphics.Rect(0, 0, width, height), 80, out)
+                // Use highest quality for intermediate conversion to minimize generational loss
+                yuvImage.compressToJpeg(android.graphics.Rect(0, 0, width, height), INTERMEDIATE_JPEG_QUALITY, out)
                 
                 // Create bitmap and rotate it to correct orientation
                 val bitmap = BitmapFactory.decodeByteArray(out.toByteArray(), 0, out.size())
@@ -753,7 +758,7 @@ class ARScanActivity : AppCompatActivity() {
                 if (quality.overallScore >= QUALITY_THRESHOLD) {
                     // Convert rotated bitmap back to byte array
                     val rotatedOut = ByteArrayOutputStream()
-                    rotatedBitmap.compress(Bitmap.CompressFormat.JPEG, 85, rotatedOut) // Higher quality for good frames
+                    rotatedBitmap.compress(Bitmap.CompressFormat.JPEG, FINAL_JPEG_QUALITY, rotatedOut)
                     val imageBytes = rotatedOut.toByteArray()
 
                     if (isScanning) {
@@ -804,13 +809,21 @@ class ARScanActivity : AppCompatActivity() {
             Log.d(TAG, "===========================")
             
             currentScanSession?.let { session ->
-                // Limit the number of frames to upload to prevent excessive storage costs
                 val framesToUpload = capturedFrames.take(MAX_FRAMES_TO_UPLOAD)
                 Log.d(TAG, "Uploading ${framesToUpload.size} high-quality frames (${capturedFrames.size} total captured)")
                 if (capturedFrames.size > MAX_FRAMES_TO_UPLOAD) {
                     Log.w(TAG, "Scan had ${capturedFrames.size} frames, but only uploading first $MAX_FRAMES_TO_UPLOAD frames")
                 }
-                viewModel.saveScanData(session, framesToUpload)
+
+                // Configure upload based on network
+                val config = com.openarmap.openarscanner.repository.ARScanRepository.UploadConfig(
+                    maxConcurrentUploads = if (isOnWifi()) 8 else 3,
+                    targetJpegQuality = if (isOnWifi()) FINAL_JPEG_QUALITY else (FINAL_JPEG_QUALITY - 4),
+                    minJpegQuality = 80,
+                    maxBytesPerFile = if (isOnWifi()) 20 * 1024 * 1024 else 12 * 1024 * 1024
+                )
+
+                viewModel.saveScanData(session, framesToUpload, config)
             }
         } catch (e: Exception) {
             Log.e(TAG, "Error saving captured frames", e)
@@ -1093,5 +1106,12 @@ class ARScanActivity : AppCompatActivity() {
                 }
             }
         }
+    }
+
+    private fun isOnWifi(): Boolean {
+        val cm = getSystemService(ConnectivityManager::class.java)
+        val network = cm.activeNetwork ?: return false
+        val caps = cm.getNetworkCapabilities(network) ?: return false
+        return caps.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)
     }
 } 

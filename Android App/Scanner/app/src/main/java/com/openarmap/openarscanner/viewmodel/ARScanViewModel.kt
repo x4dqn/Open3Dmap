@@ -82,7 +82,11 @@ class ARScanViewModel : ViewModel() {
      * @param scanData AR scan metadata to save
      * @param images List of image data as byte arrays
      */
-    fun saveScanData(scanData: ARScanData, images: List<ByteArray>) {
+    fun saveScanData(
+        scanData: ARScanData,
+        images: List<ByteArray>,
+        config: com.openarmap.openarscanner.repository.ARScanRepository.UploadConfig? = null
+    ) {
         viewModelScope.launch {
             try {
                 _scanState.value = ScanState.Saving
@@ -136,8 +140,23 @@ class ARScanViewModel : ViewModel() {
                 _uploadProgress.value = UploadProgress.Uploading(0, images.size, updatedScanData.id)
                 
                 // Perform direct upload with progress updates
-                val result = repository.saveScanWithProgress(updatedScanData, images) { current, total ->
-                    _uploadProgress.value = UploadProgress.Uploading(current, total, updatedScanData.id)
+                val result = if (config != null) {
+                    repository.saveScanWithProgress(
+                        scanData = updatedScanData,
+                        photos = images,
+                        progressCallback = { current: Int, total: Int ->
+                            _uploadProgress.value = UploadProgress.Uploading(current, total, updatedScanData.id)
+                        },
+                        config = config
+                    )
+                } else {
+                    repository.saveScanWithProgress(
+                        scanData = updatedScanData,
+                        photos = images,
+                        progressCallback = { current: Int, total: Int ->
+                            _uploadProgress.value = UploadProgress.Uploading(current, total, updatedScanData.id)
+                        }
+                    )
                 }
                 
                 when {
