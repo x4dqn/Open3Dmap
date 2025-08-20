@@ -219,7 +219,7 @@ cd Open3DMap
 
 ### Capturing Scans
 
-1. Launch the app and grant necessary permissions
+1. Launch the app and grant the necessary permissions
 2. Press "Start Scan" to begin a new capture session
 3. Move your device slowly through the space:
    - Keep the camera pointed at textured surfaces
@@ -244,45 +244,29 @@ Open3DMaps/Exports/
         └── scan_id.splatjson
 ```
 
-## Using with INRIA Gaussian Splatting (Optional)
+## Using with Brush locally (Optional)
 
 1. Export your scan from the app
 2. Copy the exported folder to your computer
-3. Follow the INRIA pipeline setup:
+3. Convert your scan with COLMAP:
+- Download [COLMAP](https://github.com/colmap/colmap/releases)
+- Follow their instructions for binary or CLI conversion
 
-```bash
-# Clone the INRIA repository
-git clone https://github.com/graphdeco-inria/gaussian-splatting.git
-cd gaussian-splatting
 
-# Install dependencies
-pip install -r requirements.txt
+### Download Brush binary
 
-# Process your scan
-python train.py --source_path /path/to/your/scan
-```
+After converting, download the Brush binary [Brush Releases](https://github.com/ArthurBrussee/brush/releases/)
+Locate and extract the binary
 
-### Accessing the Viewer
+### Training with Brush
+Run brush_app.exe
+Zip your COLMAP converted files
+Load the zipped file into Brush
 
-After training, locate the output directory (usually `output/[timestamp]`), then launch the viewer:
+The trainer supports interactive camera controls, splat rendering, and training metrics display.
 
-```bash
-python viewer.py --path /path/to/output/directory
-```
-
-The viewer supports interactive camera controls, splat rendering, and quality metrics display.
-
-## Troubleshooting
-
-### Web
-- WebGPU not available: Use latest Chrome and enable hardware acceleration; check `chrome://gpu`
-- WASM load errors: rebuild with `node build-brush-wasm.js` and restart the server
-- Mock COLMAP outputs: deploy Functions with Docker to include real COLMAP binaries
-
-### Mobile
-- Poor tracking: ensure good lighting, move slowly, focus on textured surfaces, avoid reflective/transparent surfaces
-- Export failures: check storage permissions and free space; restart the app
-- ARCore issues: update Google Play Services; clear ARCore app data; restart device
+### Exporting .ply files
+After completing training, press the Export button below the splat renderer
 
 ## Contributing
 
@@ -296,6 +280,6 @@ This project is licensed under CC BY-NC 4.0 - see the LICENSE file for details.
 
 - ARCore team for the excellent tracking capabilities
 - INRIA team for their work on [3D Gaussian Splatting](https://repo-sam.inria.fr/fungraph/3d-gaussian-splatting/)
+- ArturBrussee for the incredible [Brush](https://github.com/ArthurBrussee/brush)
 - All contributors and users of the project
-
 
