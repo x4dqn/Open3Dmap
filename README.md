@@ -249,8 +249,8 @@ Open3DMaps/Exports/
 1. Export your scan from the app
 2. Copy the exported folder to your computer
 3. Convert your scan with COLMAP:
-- Download [COLMAP](https://github.com/colmap/colmap/releases)
-- Follow their instructions for binary or CLI conversion
+  - Download [COLMAP](https://github.com/colmap/colmap/releases)
+  - Follow their instructions for binary or CLI conversion
 
 
 ### Download Brush binary
@@ -259,9 +259,9 @@ After converting, download the Brush binary [Brush Releases](https://github.com/
 Locate and extract the binary
 
 ### Training with Brush
-Run brush_app.exe
-Zip your COLMAP converted files
-Load the zipped file into Brush
+1. Run brush_app.exe
+2. Zip your COLMAP converted files
+3. Load the zipped file into Brush
 
 The trainer supports interactive camera controls, splat rendering, and training metrics display.
 
