@@ -280,6 +280,6 @@ This project is licensed under CC BY-NC 4.0 - see the LICENSE file for details.
 
 - ARCore team for the excellent tracking capabilities
 - INRIA team for their work on [3D Gaussian Splatting](https://repo-sam.inria.fr/fungraph/3d-gaussian-splatting/)
-- ArturBrussee for the incredible [Brush](https://github.com/ArthurBrussee/brush)
+- ArthurBrussee for the incredible [Brush](https://github.com/ArthurBrussee/brush)
 - All contributors and users of the project
 
